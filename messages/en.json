@@ -1,6 +1,11 @@
 {
   "Hero": {
     "title": "Hi, I'm Peerapat",
-    "subtitle": "Fullstack Developer with AI"
+    "subtitle": "Fullstack Developer with AI",
+    "name" : "Phiraphat",
+    "project" : "Projects",
+    "experience" : "Experience",
+    "contact" : "Contact",
+    "hireMe" : "Hire Me"
   }
 }
