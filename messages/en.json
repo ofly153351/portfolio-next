@@ -2,10 +2,337 @@
   "Hero": {
     "title": "Hi, I'm Peerapat",
     "subtitle": "Fullstack Developer with AI",
-    "name" : "Phiraphat",
-    "project" : "Projects",
-    "experience" : "Experience",
-    "contact" : "Contact",
-    "hireMe" : "Hire Me"
+    "name": "Phiraphat",
+    "project": "Projects",
+    "experience": "Experience",
+    "contact": "Contact",
+    "hireMe": "Hire Me"
+  },
+  "Portfolio": {
+    "nav": {
+      "brand": "Peerapat",
+      "projects": "Projects",
+      "experience": "Experience",
+      "contact": "Contact",
+      "hireMe": "Hire Me",
+      "toggleMenu": "Toggle navigation menu"
+    },
+    "hero": {
+      "badge": "Available for freelance",
+      "titlePrefix": "Hi, I'm",
+      "name": "Peerapat",
+      "subtitle": "Fullstack Developer with AI Integration",
+      "description": "I architect digital solutions where high-performance engineering meets intelligent automation. Transforming complex logic into seamless user experiences.",
+      "viewProjects": "View Projects",
+      "getInTouch": "Get in Touch"
+    },
+    "ai": {
+      "version": "Peerapat-Assistant-v1.0",
+      "response": "I can help you explore Peerapat's portfolio. Would you like to see technical stack details or specific AI-driven projects?",
+      "placeholder": "Ask me anything...",
+      "quickActions": [
+        {
+          "label": "What are your skills?"
+        },
+        {
+          "label": "Show me your projects"
+        }
+      ]
+    },
+    "skills": {
+      "eyebrow": "Capabilities",
+      "title": "The Technical Core",
+      "items": [
+        {
+          "title": "Angular",
+          "description": "Enterprise-grade reactive frontend architecture."
+        },
+        {
+          "title": "Node.js",
+          "description": "Scalable microservices and robust API development."
+        },
+        {
+          "title": "TypeScript",
+          "description": "Type-safe logic for reliable production systems."
+        },
+        {
+          "title": "AI Engineering",
+          "description": "LLM integration and prompt engineering specialization."
+        }
+      ]
+    },
+    "projects": {
+      "eyebrow": "Curated Works",
+      "title": "Recent Projects",
+      "viewCaseStudy": "View Case Study",
+      "items": [
+        {
+          "tag": "AI PLATFORM",
+          "title": "Nexus AI Dashboard",
+          "description": "A real-time analytics engine using GPT for automated market sentiment analysis and predictive modeling.",
+          "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC2K37GVabe7CqMwAUp_fhAXRXv5oU00McFSPnmJw3dm6cCz2mDSPselEgl_68psT_jrvFB_y4U8MwSv2eeaMZHcYBrSCEPDUavJhSfRwLtI_ew4htZPKyml5rgBBUopynth9D3tDRqmYOJCU2sIewPZufN6dHM_d4bmN_5Fntt_atSoGWC_ymt_0YQgylc31DU2cHsHdpzilI1l4uDI6c_926JtLg4XKGULY7Q1hICAQ2n5ajHpn1CW9gxTKBl4lA9-hP7bHKqlx-W",
+          "alt": "Abstract 3D render of floating glass spheres and neural network lines",
+          "tone": "primary"
+        },
+        {
+          "tag": "MOBILE UX",
+          "title": "Lumina Wallet",
+          "description": "Decentralized asset management with biometric encryption and instant swapping.",
+          "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAGY6k1Jj-dAjw3axCo0OaMYc1H8jYRncYGcfsBAHFaS_DSssvo-DO-6BLPwKo8nQ6BY9oRzgJp-s_utlADlXoENH3oZhaad5HmThDohSiPS_KcZ7CMbRTLoyYmM7WosuTkqhwqitAIlQ8GkA_zZIlhW0Yh3WVxLVMahycKFJpS-4cF7sApZyDMZalf5fRFr_60y0Cd-yy6ytxqr1y6n3wLYBFLUlWEhz67DOfEMd1O238Tlqu2Z_4FtTQQs024-p_ePTSqJQ-WyfwQ",
+          "alt": "Sleek mobile app interface mockup with glassmorphism elements",
+          "tone": "secondary"
+        },
+        {
+          "tag": "INFRASTRUCTURE",
+          "title": "EtherStream Engine",
+          "description": "A custom Node.js websocket architecture designed for sub-10ms data streaming in high-frequency trading apps.",
+          "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDPcXcIYZV5TDZhfYq8rCF3Pm-ltMwElsHd5i59CE8j9xp__NoOfVzx30sg8rOw3V4mkcv7jI6BQgAr-pMlS1ytmjKcnUWyeeNus25VJ87eDHsKbeffh3Ok8GmFguz1ZpSxfdvhimBfgzqQzakt5GtHwn_fvbWab4p_aYVd08WChZpIhdmx7agV66SeKJqfTditQxZhuqSQfTILs5cPCdsA2kB2jgVmuFLCTKtPo46UbITDxDDpnmELQrFuwg7nl4S6QACFNJ65pJ0_",
+          "alt": "Digital circuit board pattern with blue fiber optic lights",
+          "tone": "tertiary"
+        }
+      ]
+    },
+    "architecture": {
+      "eyebrow": "Clean Architecture",
+      "title": "Scalable Structure",
+      "description": "My development philosophy follows atomic principles in modern frontend architecture. Each portfolio section is a decoupled component managed through a cohesive app shell and shared design tokens.",
+      "codeTitle": "app.component.html",
+      "codeHint": "// Angular 17+ Signals & Standalone",
+      "list": {
+        "items": [
+          "Reactive state management using Signals",
+          "Lazy-loaded project modules",
+          "Type-safe configuration layers"
+        ]
+      }
+    },
+    "footer": {
+      "copyright": "© 2026 Peerapat. Digital Architect.",
+      "github": "Github",
+      "linkedin": "LinkedIn",
+      "twitter": "Twitter"
+    }
+  },
+  "WorksPage": {
+    "nav": {
+      "brand": "Peerapat",
+      "work": "Work",
+      "about": "About",
+      "contact": "Contact",
+      "resume": "Resume"
+    },
+    "header": {
+      "badge": "Portfolio 2024",
+      "titlePrefix": "Selected",
+      "titleAccent": "Works",
+      "description": "An intentional exploration of digital architecture, focusing on high-performance platforms, AI integration, and fluid user experiences."
+    },
+    "filters": {
+      "items": [
+        {
+          "label": "All",
+          "active": true
+        },
+        {
+          "label": "AI Platforms"
+        },
+        {
+          "label": "Fintech"
+        },
+        {
+          "label": "Infrastructure"
+        }
+      ]
+    },
+    "projects": {
+      "featured": {
+        "tags": ["AI ENGINE", "NEXT.JS"],
+        "title": "Nova Intelligence",
+        "description": "A distributed neural network orchestrator designed for large-scale enterprise automation and real-time data synthesis.",
+        "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAD6PIx-46JLdrGwDkYboBtJLyREV-NE3V4Ow0WoMubWu5sQ_tAeB1urNLrqanl3Qh-YMIWdv5WHiQ8_kmFE1p0glPvDUEYp1oRxURjbBPM05ehg6PuiCoC5ZB9_j2VOaRaAM8esqKmvz2DK4dDrVYbVisShoiAAASNyxz4BMYO_fNsYL-D9BvPeMMGjT0ZiENcOrPCRqSeh7pavanG9vIkYGzwsuZbRNiXU3BB_A1Gaf3NILmuG4XzqLzuhc6pxOgcv8FegUERlkng",
+        "alt": "Abstract crystalline geometric structure with purple and blue refractive light",
+        "cta": "Case Study"
+      },
+      "cards": [
+        {
+          "tags": ["Fintech", "React"],
+          "title": "Ether Flow",
+          "description": "Real-time cryptocurrency analytics platform with advanced predictive modeling and liquidity tracking.",
+          "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAd1MV2dEWXixLFqnlnfjNvtHhUGXwhpU-6sdpkUheIVvV_bi0N1eXL9CZQ3S6G8UMm7IEoGb-VhzlxfALqggtYdKcHMnqCBAPHfDvvAg8I-cnE_ErmaID4ftpeP0LMUag-kFEe6BVzCZIJopGKYcskwEsbPiPjU-uuNgOI4anH_d5M0aO1-k54N7Mq3_VH8IydpCVMNvG51CYyE2GDaNLgawemOsZkfCVHZBy3KRJChnj3cRmEtWhd4oAKvZyb20JgDAwGXkUomm44",
+          "alt": "Minimalist digital dashboard interface with glass cards",
+          "cta": "View Project"
+        },
+        {
+          "tags": ["Infrastructure", "Go"],
+          "title": "Nebula Mesh",
+          "description": "A high-performance service mesh designed for low-latency communication in hybrid cloud environments.",
+          "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDgYgefvZhK8qrXfsDl1G9guGHeFReWt5amJ8Y1kFU-rE-CRVMSFYH2bJSp5_LmEv4q76XIBVO0E5etb5vCN2xllqPmjGWh-QHouRqY71wCoqoWYuCbUXBW61BSaI3AhPDnsqXAFJwVTHOTAKvW4VPJmJum9X8DkdfSDO82qnErlIplJB9AvtW59aKIaAEvlX77DNYmYQqbdQ9ds09Tb9H6kHwr1TlMokft5eJJlC4PXtb3ZAH9j_z96nw4Hc8dBgkLqtxKfF9uBI2-",
+          "alt": "Digital planet network connections over dark space",
+          "cta": "View Project"
+        },
+        {
+          "tags": ["Security", "Rust"],
+          "title": "Sentinel Core",
+          "description": "Memory-safe cybersecurity kernel designed to protect edge computing nodes from zero-day exploits.",
+          "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuB4pGYhqSYg1mp8L0_kUSyQG-K6Kb1RMPFQiWNlh_7RmRT15uJ_5ZCgi8YB7nbHtv8s2ztdKdmM00KYTQOgXaoOmM5pCq2Uw05JktONCgWv-eZy9sTE5tK3Gm_m2Rhf4Et-TIlrrR7SFZI9V_-DHCk9GWTeWIMye4QxCU5YnIZnlsT47fU1xQzud1-nl1Zy_60hfYFSCqJaIGLLCQLT4UgAGwmBFOjIN-z_p-sA5nTeVzU77j9JWGpRJms7pfnnunOV26i9jDm_IWoB",
+          "alt": "Microchip circuit board close-up with glowing data paths",
+          "cta": "View Project"
+        },
+        {
+          "tags": ["Design Tools", "TypeScript"],
+          "title": "Prism UI",
+          "description": "An atomic design system engine that generates theme-compliant UI components through natural language prompts.",
+          "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDiTtjv5GLn1oOpgHLlDG03jjP-1g-1vI1cF4yMVXOXIBhXK6kdFGOlRxXQtp1fXMOjU9WrOGAVcJp2SXQChS-kUjybD4LsMa5n5Pq-ZKie8h0887yBUgiq3KDf259h0C-6XPwNFsfrJfvE5Y5sGC6q7vcPhfivyaF04p4RymeNPX-vOJVOwinkJGmalN3SVIFChzq4wehrdqaFu4zR1Aia9H_DxZkRN7PhZgLSy8czFgI0sJ2VCySzjDaXPlsBLAqm_mf4Yn7FnTtQ",
+          "alt": "Iridescent metallic fluid waves on dark background",
+          "cta": "View Project"
+        }
+      ]
+    },
+    "cta": {
+      "title": "Have a project in mind?",
+      "description": "Let's build something that pushes the boundaries of the digital experience.",
+      "button": "Start a Conversation"
+    },
+    "footer": {
+      "github": "Github",
+      "linkedin": "LinkedIn",
+      "twitter": "Twitter",
+      "copyright": "© 2026 Peerapat. Built with Intentional Asymmetry."
+    }
+  },
+  "WorksSlug": {
+    "items": {
+      "nova-intelligence": {
+        "slug": "nova-intelligence",
+        "nav": {
+          "brand": "Peerapat",
+          "work": "Work",
+          "about": "About",
+          "contact": "Contact",
+          "resume": "Resume"
+        },
+        "hero": {
+          "eyebrow": "Project Case Study",
+          "title": "Nova Intelligence",
+          "subtitle": "Distributed Neural Network Orchestrator",
+          "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuA6vz7RC0qy6eFSbKsTo_MElW-cu66yviyb-vzwtVGJ-zCPNHqfl6CFw_zM99ldkmZMxGd9JupZ8sUKb2u_C6KNKCSDselm-2pwJBbuo5tRCB-NkiMUbIMU4YNNLRLNE3rRueJn76Suf5r18Lgevh5b31tNC6BLVH-w7vx75T1M-2MyfVmZNPSPHu7Od6li3WYRhVfy9zwQ8AX_gjyc0t5ttxcMGVWaKtWMR9jKKguunVqEgwn46kLx-N9rUgEF1Mj1JwZXjnk9vXnT",
+          "alt": "Abstract 3D visualization of neural network pathways with violet and cyan pulses"
+        },
+        "overview": {
+          "challengeTitle": "The Challenge",
+          "challengeBody": "Modern LLMs require massive computational throughput that centralized architectures struggle to handle without latency. Nova Intelligence decentralizes inference to deliver sub-100ms response times across distributed global nodes while preserving integrity.",
+          "solutionTitle": "The Solution",
+          "solutionBody": "We engineered a custom Rust orchestration layer that allocates workloads by node proximity and hardware health. A hybrid P2P-relay system creates a self-healing grid that scales horizontally without a single point of failure.",
+          "architectureTitle": "Technical Architecture",
+          "architecture": [
+            {
+              "icon": "memory",
+              "title": "Rust",
+              "description": "Used for the high-performance core orchestrator with memory safety and thread-level concurrency.",
+              "tone": "primary"
+            },
+            {
+              "icon": "layers",
+              "title": "Next.js",
+              "description": "The administrative dashboard uses Server Components for real-time telemetry streaming.",
+              "tone": "secondary"
+            },
+            {
+              "icon": "hub",
+              "title": "PyTorch",
+              "description": "Distributed tensor shards optimized for heterogeneous GPU environments.",
+              "tone": "tertiary"
+            },
+            {
+              "icon": "cloud_sync",
+              "title": "AWS",
+              "description": "Multi-region edge deployment for the primary coordination gateway.",
+              "tone": "muted"
+            }
+          ]
+        },
+        "metrics": {
+          "items": [
+            {
+              "value": "40%",
+              "label": "Latency Reduction",
+              "tone": "primary"
+            },
+            {
+              "value": "1M+",
+              "label": "Data Points / Sec",
+              "tone": "secondary"
+            },
+            {
+              "value": "99.9%",
+              "label": "Uptime Efficiency",
+              "tone": "tertiary"
+            }
+          ]
+        },
+        "accomplishments": {
+          "title": "Technical Accomplishments",
+          "items": [
+            {
+              "icon": "bolt",
+              "title": "Real-time Data Synthesis",
+              "description": "Engineered a low-level stream processor that aggregates fragmented neural signals into a coherent tensor stream with zero buffer bloat.",
+              "tone": "primary"
+            },
+            {
+              "icon": "lan",
+              "title": "Low-latency Orchestration",
+              "description": "Developed a load-balancing algorithm that predicts network congestion 500ms ahead using historical traffic patterns.",
+              "tone": "secondary"
+            },
+            {
+              "icon": "security",
+              "title": "Zero-Trust Telemetry",
+              "description": "Implemented end-to-end encrypted packet inspection to monitor node health without exposing model data.",
+              "tone": "tertiary"
+            },
+            {
+              "icon": "auto_mode",
+              "title": "Elastic Scalability",
+              "description": "Supports instant node onboarding, expanding global compute capacity up to 200% during demand spikes.",
+              "tone": "muted"
+            }
+          ]
+        },
+        "gallery": {
+          "title": "System Visuals & Interface",
+          "images": [
+            {
+              "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAo7js_GRshntSaJBWMM4kaMx9YcEPJ-iwmTtirQDOtJsPamwVjwtLn2t-Dv6LxTaboJPZCsNm-UehmDLdh2ea3IeP9E0ZLyJC8-TmhFl1epMXcjQiYQdWkShl6i4sviGIyGWQJ0eyKOQwM3HfAVrtnVs_7EkbKj5HCIF7tbh2N6ciz8KoC965E0wCyqH_uULc5yw5WQPhet2iLp6RhcPFM_7ZU8Hjp0NwA8D9gb8F_okBdwPztuwTI0bUCP7JBVE1Dmtf3U2sXn77v",
+              "alt": "Futuristic dashboard with glowing violet charts and real-time visualizations"
+            },
+            {
+              "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBM309PLHrZh7YgMjrcp07JS8-2UlFDr8GjnFb8IIVEzbSoyi7ckuGebcZhvjLo0NeYJDPxD1e8KUdhFD1vhlnhLsXE4rH8aF4By1rOxmNRZExs5IuWUtNzLQRve4s2-m40i9j4tpfZ8Utc39GgV1CkQmMDFC6W2tpwF1QQpVLBfQlK9zyAO44fpsSP6IU6usAHwDgRd7ANKlzBloIsw-SqjeHPGXkzJ_O0nRiZEjqW_MohDkL5zWgeiCnuHde1E6_nlWf_elqQnxhA",
+              "alt": "Technical macro shot of server hardware with violet and blue LED indicators"
+            },
+            {
+              "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBfIgvdJi9AG6dVFaozo6bqcJvTVu8QfCSOPqHuBA36MbhkDr8Dm1Kk7smbRqWo0q_DG8fYAjMIAjp9U8VDdCCfffxpCJlgMuYib3J1aaCyeYHlftgLWvrTyr0Mnqlx49NOsnlMkmW2jUPyBinbbo8MVJ1Bc8H8wQb7cdlf_efFxtY2EZitCjNxnG36O8oW6D1PMms2E6VgkwIj3DIx-JuKoYJU6cehq1aw0hQryQcHSHNipph_pXcxCFraL6JrUKcxBtI-71kuRmQE",
+              "alt": "Abstract global network concept with interconnected nodes and data flow"
+            },
+            {
+              "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDpf9ApUrU6Z3d17Dv18z92HvVTG16XnUXIJHga2R-Qix-7nWBRrjoz4SSM8V-x9ymna9nHlOiPg8c0G9t2OiMrNvmpx9tOIA-pU64ewqBro73VHa0bL0NhCMgqY37wl5KPMn1KWXkEUG1G9NYvOKmIz_q3m18HteeApVPVmBdURViinQ0hMXSd6yoI58JWtBmYlxZqnd8pN1M0whaxdsjHrfB0mVEV5Y8yuNZoszXBSU6nAtV-cM5LfWKmI6_HFTAGQjRlJXvQvaSV",
+              "alt": "Block diagram and wireframes of distributed neural network systems"
+            }
+          ]
+        },
+        "cta": {
+          "title": "Intrigued by the Architecture?",
+          "viewGithub": "View GitHub",
+          "backToProjects": "Back to Projects"
+        },
+        "footer": {
+          "brand": "Peerapat",
+          "github": "GitHub",
+          "linkedin": "LinkedIn",
+          "twitter": "Twitter",
+          "copyright": "© 2026 Peerapat. Built with light and depth."
+        }
+      }
+    }
   }
 }
