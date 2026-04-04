@@ -29,13 +29,25 @@
     "ai": {
       "version": "Peerapat-Assistant-v1.0",
       "response": "I can help you explore Peerapat's portfolio. Would you like to see technical stack details or specific AI-driven projects?",
+      "thinking": "Thinking",
+      "sendAria": "Send message",
       "placeholder": "Ask me anything...",
+      "responses": {
+        "greeting": "Hey, glad you're here. Ask me about projects, skills, or contact details and I'll guide you fast.",
+        "projects": "Here are selected projects with AI, fintech, and infrastructure focus. I can scroll you to the projects section now.",
+        "skills": "Core stack: Angular, Node.js, TypeScript, and AI integration workflows. If you want, I can break down each skill by real project usage.",
+        "contact": "You can reach out from the contact section and we can discuss your project scope quickly. I can move you there now.",
+        "default": "I can help with projects, skills, and contact info in this portfolio. Try asking things like 'show projects' or 'what are your skills'."
+      },
       "quickActions": [
         {
           "label": "What are your skills?"
         },
         {
           "label": "Show me your projects"
+        },
+        {
+          "label": "How can I contact you?"
         }
       ]
     },
