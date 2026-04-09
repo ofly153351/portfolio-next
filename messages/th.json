@@ -32,6 +32,20 @@
       "thinking": "กำลังคิดคำตอบ",
       "sendAria": "ส่งข้อความ",
       "placeholder": "ถามผมได้เลย...",
+      "statusLabel": "สถานะ: {status}",
+      "usage": "การใช้งาน: prompt={prompt}, completion={completion}, total={total}",
+      "serverError": "เซิร์ฟเวอร์ผิดพลาด",
+      "unknownError": "ไม่ทราบสาเหตุ",
+      "status": {
+        "idle": "พร้อมใช้งาน",
+        "connecting": "กำลังเชื่อมต่อ",
+        "connected": "เชื่อมต่อแล้ว",
+        "streaming": "กำลังสตรีมคำตอบ",
+        "done": "เสร็จสิ้น",
+        "closed": "ปิดการเชื่อมต่อ",
+        "connectionClosed": "การเชื่อมต่อถูกปิดระหว่างสตรีม",
+        "error": "เกิดข้อผิดพลาด"
+      },
       "responses": {
         "greeting": "ยินดีต้อนรับครับ ผมช่วยแนะนำเรื่องโปรเจกต์ ทักษะ และช่องทางติดต่อได้ทันที",
         "projects": "ผลงานหลักจะเน้น AI, fintech และ infrastructure ครับ เดี๋ยวผมเลื่อนไปส่วนโปรเจกต์ให้ได้เลย",

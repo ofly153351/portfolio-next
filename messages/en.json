@@ -32,6 +32,20 @@
       "thinking": "Thinking",
       "sendAria": "Send message",
       "placeholder": "Ask me anything...",
+      "statusLabel": "Status: {status}",
+      "usage": "Usage: prompt={prompt}, completion={completion}, total={total}",
+      "serverError": "Server error",
+      "unknownError": "Unknown error",
+      "status": {
+        "idle": "idle",
+        "connecting": "connecting",
+        "connected": "connected",
+        "streaming": "streaming",
+        "done": "done",
+        "closed": "closed",
+        "connectionClosed": "connection closed while streaming",
+        "error": "error"
+      },
       "responses": {
         "greeting": "Hey, glad you're here. Ask me about projects, skills, or contact details and I'll guide you fast.",
         "projects": "Here are selected projects with AI, fintech, and infrastructure focus. I can scroll you to the projects section now.",

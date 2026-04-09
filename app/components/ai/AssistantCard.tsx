@@ -2,23 +2,23 @@
 
 import { Bot, Brain, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
-import type { QuickAction } from "@/types/ai";
-
-type ChatMessage = {
-  id: string;
-  role: "assistant" | "user";
-  text: string;
-};
-
-type ResponseKey = "greeting" | "projects" | "skills" | "contact" | "default";
+import { useLocale, useTranslations } from "next-intl";
+import type {
+  ChatMessage,
+  ChatRequestPayload,
+  ChatUsage,
+  ChatWsEvent,
+  QuickAction,
+} from "@/types/ai";
 
 export default function AssistantCard() {
   const t = useTranslations("Portfolio.ai");
+  const locale = useLocale();
   const quickActions = t.raw("quickActions") as QuickAction[];
   const [input, setInput] = useState("");
-  const [isThinking, setIsThinking] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [statusLabel, setStatusLabel] = useState(t("status.idle"));
+  const [usage, setUsage] = useState<ChatUsage>();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "intro",
@@ -26,12 +26,21 @@ export default function AssistantCard() {
       text: t("response"),
     },
   ]);
+  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const timeoutRef = useRef<number[]>([]);
-  const intervalRef = useRef<number | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const pendingPayloadRef = useRef<ChatRequestPayload | null>(null);
+  const activeReplyIdRef = useRef<string | null>(null);
+  const isStreamingRef = useRef(false);
+  const tokenQueueRef = useRef<string[]>([]);
+  const tokenDrainTimerRef = useRef<number | null>(null);
+  const pendingDoneUsageRef = useRef<ChatUsage | undefined>(undefined);
   const messageIdRef = useRef(0);
+  const sessionIdRef = useRef(
+    `nextjs-ws-${Math.random().toString(36).slice(2, 10)}`,
+  );
 
-  const nextMessageId = (prefix: "assistant" | "user") => {
+  const nextMessageId = (prefix: "assistant" | "user"): string => {
     messageIdRef.current += 1;
     return `${prefix}-${messageIdRef.current}`;
   };
@@ -42,88 +51,223 @@ export default function AssistantCard() {
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages, isThinking]);
+  }, [messages, isStreaming]);
 
   useEffect(
     () => () => {
-      timeoutRef.current.forEach((timerId) => window.clearTimeout(timerId));
-      if (intervalRef.current !== null) {
-        window.clearInterval(intervalRef.current);
+      if (tokenDrainTimerRef.current !== null) {
+        window.clearInterval(tokenDrainTimerRef.current);
+        tokenDrainTimerRef.current = null;
       }
+      wsRef.current?.close();
+      wsRef.current = null;
     },
     [],
   );
 
-  const resolveResponse = (value: string): { key: ResponseKey; target?: string } => {
-    const text = value.toLowerCase();
+  useEffect(() => {
+    activeReplyIdRef.current = activeReplyId;
+  }, [activeReplyId]);
 
-    if (text.includes("hi") || text.includes("hello") || text.includes("สวัสดี")) {
-      return { key: "greeting" };
-    }
+  useEffect(() => {
+    isStreamingRef.current = isStreaming;
+  }, [isStreaming]);
 
-    if (text.includes("project") || text.includes("work") || text.includes("โปรเจกต์")) {
-      return { key: "projects", target: "projects" };
-    }
+  const appendToken = (token: string) => {
+    const replyId = activeReplyIdRef.current;
+    if (!replyId) return;
 
-    if (text.includes("skill") || text.includes("stack") || text.includes("ทักษะ")) {
-      return { key: "skills", target: "skills" };
-    }
-
-    if (text.includes("contact") || text.includes("hire") || text.includes("ติดต่อ")) {
-      return { key: "contact", target: "contact" };
-    }
-
-    return { key: "default" };
+    setMessages((prev) =>
+      prev.map((item) =>
+        item.id === replyId ? { ...item, text: item.text + token } : item,
+      ),
+    );
   };
 
-  const streamReply = (text: string, target?: string) => {
-    const replyId = nextMessageId("assistant");
-    let currentIndex = 0;
+  const finalizeStreamIfDone = () => {
+    if (tokenQueueRef.current.length > 0) return;
+    if (!pendingDoneUsageRef.current) return;
 
-    setMessages((prev) => [...prev, { id: replyId, role: "assistant", text: "" }]);
-    setIsStreaming(true);
+    setUsage(pendingDoneUsageRef.current);
+    pendingDoneUsageRef.current = undefined;
+    setIsStreaming(false);
+    setStatusLabel(t("status.done"));
+  };
 
-    intervalRef.current = window.setInterval(() => {
-      currentIndex += 1;
-      setMessages((prev) =>
-        prev.map((item) => (item.id === replyId ? { ...item, text: text.slice(0, currentIndex) } : item)),
-      );
+  const startTokenDrain = () => {
+    if (tokenDrainTimerRef.current !== null) return;
 
-      if (currentIndex >= text.length) {
-        if (intervalRef.current !== null) {
-          window.clearInterval(intervalRef.current);
-          intervalRef.current = null;
+    tokenDrainTimerRef.current = window.setInterval(() => {
+      const nextToken = tokenQueueRef.current.shift();
+      if (nextToken) {
+        appendToken(nextToken);
+      }
+
+      if (tokenQueueRef.current.length === 0) {
+        if (tokenDrainTimerRef.current !== null) {
+          window.clearInterval(tokenDrainTimerRef.current);
+          tokenDrainTimerRef.current = null;
+        }
+        finalizeStreamIfDone();
+      }
+    }, 1000);
+  };
+
+  const connectSocket = () => {
+    const existing = wsRef.current;
+    if (
+      existing &&
+      (existing.readyState === WebSocket.OPEN ||
+        existing.readyState === WebSocket.CONNECTING)
+    ) {
+      return existing;
+    }
+
+    const ws = new WebSocket("ws://localhost:8080/api/chat/ws");
+    wsRef.current = ws;
+    setStatusLabel(t("status.connecting"));
+
+    ws.onopen = () => {
+      setStatusLabel(t("status.connected"));
+      const pending = pendingPayloadRef.current;
+      if (!pending) return;
+
+      ws.send(JSON.stringify(pending));
+      pendingPayloadRef.current = null;
+      setStatusLabel(t("status.streaming"));
+    };
+
+    ws.onclose = () => {
+      wsRef.current = null;
+      if (isStreamingRef.current) {
+        setStatusLabel(t("status.connectionClosed"));
+        setIsStreaming(false);
+      } else {
+        setStatusLabel(t("status.closed"));
+      }
+    };
+
+    ws.onerror = () => {
+      setStatusLabel(t("status.error"));
+    };
+
+    ws.onmessage = (event) => {
+      let data: ChatWsEvent;
+      try {
+        data = JSON.parse(event.data) as ChatWsEvent;
+      } catch {
+        setIsStreaming(false);
+        setStatusLabel(t("status.error"));
+        appendToken(`\n${t("serverError")}: ${t("unknownError")}`);
+        return;
+      }
+
+      if (data.type === "status") {
+        setStatusLabel(data.message || t("status.streaming"));
+        return;
+      }
+
+      if (data.type === "token") {
+        tokenQueueRef.current.push(data.token ?? "");
+        startTokenDrain();
+        setIsStreaming(true);
+        return;
+      }
+
+      if (data.type === "done") {
+        pendingDoneUsageRef.current = data.usage;
+        finalizeStreamIfDone();
+        return;
+      }
+
+      if (data.type === "error") {
+        tokenQueueRef.current = [];
+        pendingDoneUsageRef.current = undefined;
+        if (tokenDrainTimerRef.current !== null) {
+          window.clearInterval(tokenDrainTimerRef.current);
+          tokenDrainTimerRef.current = null;
         }
         setIsStreaming(false);
-
-        if (target) {
-          const scrollTimer = window.setTimeout(() => {
-            document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 320);
-          timeoutRef.current.push(scrollTimer);
-        }
+        setStatusLabel(data.error || t("status.error"));
+        appendToken(
+          `\n${t("serverError")}: ${data.error ?? t("unknownError")}`,
+        );
       }
-    }, 18);
+    };
+
+    return ws;
+  };
+
+  const resolveScrollTarget = (value: string): string | undefined => {
+    const text = value.toLowerCase();
+    if (
+      text.includes("project") ||
+      text.includes("work") ||
+      text.includes("โปรเจกต์")
+    )
+      return "projects";
+    if (
+      text.includes("skill") ||
+      text.includes("stack") ||
+      text.includes("ทักษะ")
+    )
+      return "skills";
+    if (
+      text.includes("contact") ||
+      text.includes("hire") ||
+      text.includes("ติดต่อ")
+    )
+      return "contact";
+    return undefined;
   };
 
   const submitMessage = (value: string) => {
     const trimmed = value.trim();
-    if (!trimmed || isThinking || isStreaming) return;
+    if (!trimmed || isStreaming) return;
 
-    setMessages((prev) => [...prev, { id: nextMessageId("user"), role: "user", text: trimmed }]);
+    const userId = nextMessageId("user");
+    const replyId = nextMessageId("assistant");
+    const target = resolveScrollTarget(trimmed);
+    const payload: ChatRequestPayload = {
+      message: trimmed,
+      session_id: sessionIdRef.current,
+      top_k: 5,
+      lang: locale.startsWith("th") ? "th" : "en",
+    };
+
+    setMessages((prev) => [
+      ...prev,
+      { id: userId, role: "user", text: trimmed },
+      { id: replyId, role: "assistant", text: "" },
+    ]);
     setInput("");
-    setIsThinking(true);
+    setUsage(undefined);
+    pendingDoneUsageRef.current = undefined;
+    tokenQueueRef.current = [];
+    if (tokenDrainTimerRef.current !== null) {
+      window.clearInterval(tokenDrainTimerRef.current);
+      tokenDrainTimerRef.current = null;
+    }
+    setActiveReplyId(replyId);
+    setIsStreaming(true);
+    setStatusLabel(t("status.streaming"));
 
-    const resolved = resolveResponse(trimmed);
-    const thinkingTimer = window.setTimeout(() => {
-      setIsThinking(false);
-      streamReply(t(`responses.${resolved.key}`), resolved.target);
-    }, 620);
+    if (target) {
+      document
+        .getElementById(target)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 
-    timeoutRef.current.push(thinkingTimer);
+    const ws = connectSocket();
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+      return;
+    }
+
+    pendingPayloadRef.current = payload;
   };
 
-  const isBusy = isThinking || isStreaming;
+  const isBusy = isStreaming;
 
   return (
     <div className="relative group w-full">
@@ -141,7 +285,13 @@ export default function AssistantCard() {
         </div>
 
         <div className="flex h-[420px] flex-col gap-4 p-6 sm:h-[400px]">
-          <div ref={scrollRef} className="flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
+          <p className="text-xs text-[#ccc3d8]/70">
+            {t("statusLabel", { status: statusLabel })}
+          </p>
+          <div
+            ref={scrollRef}
+            className="flex flex-1 flex-col gap-4 overflow-y-auto pr-1"
+          >
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -162,33 +312,24 @@ export default function AssistantCard() {
                   }`}
                 >
                   {message.text}
-                  {isStreaming && message.id === messages[messages.length - 1]?.id ? (
+                  {isStreaming &&
+                  message.id === messages[messages.length - 1]?.id ? (
                     <span className="ml-1 inline-block h-4 w-1.5 animate-pulse bg-[#d2bbff]" />
                   ) : null}
                 </div>
               </div>
             ))}
-
-            {isThinking ? (
-              <div className="chat-pop flex items-start gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#7c3aed]/30 bg-[#7c3aed]/20">
-                  <Brain className="text-[#d2bbff]" size={16} />
-                </div>
-                <div className="max-w-[85%] rounded-2xl rounded-tl-none border border-[#4a4455]/10 bg-[#2a2a2a]/60 p-4 text-sm leading-relaxed text-[#e5e2e1]">
-                  <span className="mr-2 text-[#ccc3d8]">{t("thinking")}</span>
-                  <span className="typing-dot inline-block h-2 w-2 rounded-full bg-[#d2bbff]" />
-                  <span
-                    className="typing-dot inline-block h-2 w-2 rounded-full bg-[#adc6ff]"
-                    style={{ animationDelay: "120ms" }}
-                  />
-                  <span
-                    className="typing-dot inline-block h-2 w-2 rounded-full bg-[#cebdff]"
-                    style={{ animationDelay: "240ms" }}
-                  />
-                </div>
-              </div>
-            ) : null}
           </div>
+
+          {usage ? (
+            <p className="text-xs text-[#adc6ff]">
+              {t("usage", {
+                prompt: usage.prompt_tokens,
+                completion: usage.completion_tokens,
+                total: usage.total_tokens,
+              })}
+            </p>
+          ) : null}
 
           <div className="flex flex-wrap gap-2">
             {quickActions.map((action) => (
