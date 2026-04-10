@@ -14,6 +14,7 @@
       "projects": "โปรเจกต์",
       "experience": "ประสบการณ์",
       "contact": "ติดต่อ",
+      "admin": "หลังบ้าน",
       "hireMe": "จ้างฉัน",
       "toggleMenu": "สลับเมนูนำทาง"
     },
@@ -137,6 +138,101 @@
       "github": "Github",
       "linkedin": "LinkedIn",
       "twitter": "Twitter"
+    }
+  },
+  "Backoffice": {
+    "badge": "Backoffice CMS",
+    "title": "จัดการเนื้อหา Portfolio",
+    "subtitle": "แก้ไขข้อมูล technical, projects และข้อมูล portfolio ได้ในหน้าเดียว",
+    "menu": {
+      "technical": "Technical",
+      "projects": "Projects",
+      "portfolioInfo": "Portfolio Info"
+    },
+    "actions": {
+      "save": "บันทึก",
+      "load": "โหลดใหม่",
+      "publish": "เผยแพร่",
+      "history": "ประวัติ",
+      "export": "ส่งออก JSON",
+      "upload": "อัปโหลดรูป",
+      "logout": "ออกจากระบบ",
+      "viewSite": "ดูหน้าเว็บ"
+    },
+    "historyTitle": "ประวัติการเผยแพร่",
+    "uploadedUrl": "ลิงก์รูปที่อัปโหลด: {url}",
+    "systemUser": "ระบบ",
+    "statusLabel": "สถานะ: {status}",
+    "status": {
+      "idle": "พร้อมใช้งาน",
+      "loading": "กำลังโหลดข้อมูล",
+      "loaded": "โหลดข้อมูลจาก backend แล้ว",
+      "loadFailed": "โหลดข้อมูลไม่สำเร็จ",
+      "saving": "กำลังบันทึกข้อมูล",
+      "saved": "บันทึกสำเร็จ",
+      "saveFailed": "บันทึกไม่สำเร็จ",
+      "versionConflict": "บันทึกไม่สำเร็จ: เวอร์ชันข้อมูลไม่ตรงกัน กรุณาโหลดใหม่",
+      "publishing": "กำลังเผยแพร่ข้อมูล",
+      "published": "เผยแพร่สำเร็จ",
+      "publishFailed": "เผยแพร่ไม่สำเร็จ",
+      "uploading": "กำลังอัปโหลดรูป",
+      "uploaded": "อัปโหลดรูปสำเร็จ",
+      "uploadFailed": "อัปโหลดรูปไม่สำเร็จ",
+      "historyLoaded": "โหลดประวัติสำเร็จ",
+      "historyFailed": "โหลดประวัติไม่สำเร็จ",
+      "authRequired": "กรุณาเข้าสู่ระบบ"
+    },
+    "common": {
+      "add": "เพิ่มรายการ",
+      "remove": "ลบ"
+    },
+    "technical": {
+      "title": "เมนู Technical",
+      "uploadIcon": "อัปโหลดไอคอน (SVG/PNG)",
+      "defaultTitle": "Technical ใหม่",
+      "defaultDescription": "แก้ไขรายละเอียด Technical",
+      "fields": {
+        "title": "ชื่อทักษะ",
+        "description": "รายละเอียดทักษะ",
+        "icon": "ลิงก์ไอคอนทักษะ"
+      }
+    },
+    "projects": {
+      "title": "เมนู Projects",
+      "imagesTitle": "รูปภาพโปรเจกต์",
+      "addImageUrl": "เพิ่มลิงก์รูป",
+      "uploadImages": "อัปโหลดหลายรูป",
+      "fields": {
+        "tag": "แท็กโปรเจกต์",
+        "title": "ชื่อโปรเจกต์",
+        "description": "รายละเอียดโปรเจกต์",
+        "image": "ลิงก์รูปภาพ"
+      }
+    },
+    "portfolioInfo": {
+      "title": "ข้อมูล Portfolio",
+      "fields": {
+        "ownerName": "ชื่อเจ้าของพอร์ต",
+        "title": "ชื่อ Portfolio",
+        "subtitle": "คำอธิบายสั้น",
+        "about": "เกี่ยวกับ",
+        "email": "อีเมลติดต่อ",
+        "phone": "เบอร์ติดต่อ",
+        "location": "ที่อยู่/โลเคชัน"
+      }
+    },
+    "login": {
+      "badge": "เข้าสู่ระบบหลังบ้าน",
+      "title": "เข้าสู่ระบบ Admin",
+      "subtitle": "ใช้บัญชีผู้ดูแลเพื่อจัดการเนื้อหา Portfolio",
+      "username": "ชื่อผู้ใช้",
+      "password": "รหัสผ่าน",
+      "usernamePlaceholder": "กรอกชื่อผู้ใช้",
+      "passwordPlaceholder": "กรอกรหัสผ่าน",
+      "submit": "เข้าสู่ระบบ",
+      "submitting": "กำลังเข้าสู่ระบบ...",
+      "invalidCredentials": "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
+      "requestFailed": "เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่"
     }
   },
   "WorksPage": {

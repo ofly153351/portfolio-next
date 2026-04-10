@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function SiteNavbar() {
+  const locale = useLocale();
   const t = useTranslations("Portfolio.nav");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -24,6 +25,9 @@ export default function SiteNavbar() {
             </Link>
             <Link className="text-[#ccc3d8] transition-colors hover:text-[#e5e2e1]" href="#contact">
               {t("contact")}
+            </Link>
+            <Link className="text-[#ccc3d8] transition-colors hover:text-[#e5e2e1]" href={`/${locale}/admin`}>
+              {t("admin")}
             </Link>
           </div>
 
@@ -55,6 +59,9 @@ export default function SiteNavbar() {
             </Link>
             <Link className="min-h-11 rounded-xl px-3 py-2 text-[#e5e2e1]" href="#contact" onClick={() => setIsOpen(false)}>
               {t("contact")}
+            </Link>
+            <Link className="min-h-11 rounded-xl px-3 py-2 text-[#e5e2e1]" href={`/${locale}/admin`} onClick={() => setIsOpen(false)}>
+              {t("admin")}
             </Link>
             <button className="min-h-11 rounded-xl bg-[#7c3aed] px-4 py-2 text-left font-semibold text-[#ede0ff]" type="button">
               {t("hireMe")}

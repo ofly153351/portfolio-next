@@ -14,6 +14,7 @@
       "projects": "Projects",
       "experience": "Experience",
       "contact": "Contact",
+      "admin": "Backoffice",
       "hireMe": "Hire Me",
       "toggleMenu": "Toggle navigation menu"
     },
@@ -137,6 +138,101 @@
       "github": "Github",
       "linkedin": "LinkedIn",
       "twitter": "Twitter"
+    }
+  },
+  "Backoffice": {
+    "badge": "Backoffice CMS",
+    "title": "Portfolio Content Manager",
+    "subtitle": "Manage technical, project, and portfolio information from one admin panel.",
+    "menu": {
+      "technical": "Technical",
+      "projects": "Projects",
+      "portfolioInfo": "Portfolio Info"
+    },
+    "actions": {
+      "save": "Save",
+      "load": "Reload",
+      "publish": "Publish",
+      "history": "History",
+      "export": "Export JSON",
+      "upload": "Upload Image",
+      "logout": "Logout",
+      "viewSite": "View Site"
+    },
+    "historyTitle": "Publish History",
+    "uploadedUrl": "Uploaded URL: {url}",
+    "systemUser": "system",
+    "statusLabel": "Status: {status}",
+    "status": {
+      "idle": "Ready",
+      "loading": "Loading content",
+      "loaded": "Loaded from backend",
+      "loadFailed": "Load failed",
+      "saving": "Saving content",
+      "saved": "Saved successfully",
+      "saveFailed": "Save failed",
+      "versionConflict": "Save failed: version conflict, please reload",
+      "publishing": "Publishing content",
+      "published": "Published successfully",
+      "publishFailed": "Publish failed",
+      "uploading": "Uploading image",
+      "uploaded": "Image uploaded",
+      "uploadFailed": "Image upload failed",
+      "historyLoaded": "History loaded",
+      "historyFailed": "History load failed",
+      "authRequired": "Authentication required"
+    },
+    "common": {
+      "add": "Add item",
+      "remove": "Remove"
+    },
+    "technical": {
+      "title": "Technical Menu",
+      "uploadIcon": "Upload Icon (SVG/PNG)",
+      "defaultTitle": "New Technical",
+      "defaultDescription": "Update technical description",
+      "fields": {
+        "title": "Technical title",
+        "description": "Technical description",
+        "icon": "Technical icon URL"
+      }
+    },
+    "projects": {
+      "title": "Project Menu",
+      "imagesTitle": "Project Images",
+      "addImageUrl": "Add Image URL",
+      "uploadImages": "Upload Images",
+      "fields": {
+        "tag": "Project tag",
+        "title": "Project title",
+        "description": "Project description",
+        "image": "Image URL"
+      }
+    },
+    "portfolioInfo": {
+      "title": "Portfolio Information",
+      "fields": {
+        "ownerName": "Owner name",
+        "title": "Portfolio title",
+        "subtitle": "Subtitle",
+        "about": "About",
+        "email": "Contact email",
+        "phone": "Contact phone",
+        "location": "Location"
+      }
+    },
+    "login": {
+      "badge": "Backoffice Login",
+      "title": "Sign in to Admin",
+      "subtitle": "Use admin credentials to manage portfolio content.",
+      "username": "Username",
+      "password": "Password",
+      "usernamePlaceholder": "Enter username",
+      "passwordPlaceholder": "Enter password",
+      "submit": "Sign In",
+      "submitting": "Signing in...",
+      "invalidCredentials": "Invalid username or password",
+      "requestFailed": "Request failed. Please try again."
     }
   },
   "WorksPage": {
