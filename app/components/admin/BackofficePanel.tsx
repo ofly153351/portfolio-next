@@ -2,39 +2,37 @@
 
 import axios from "axios";
 import {
+  Bell,
   CheckCircle2,
-  Download,
   FolderKanban,
-  History,
-  Layers3,
+  Globe2,
+  HelpCircle,
   LayoutDashboard,
+  Layers3,
+  Link2,
   Loader2,
   LogOut,
   OctagonAlert,
+  Pencil,
   PlusSquare,
-  RefreshCcw,
-  Rocket,
-  Save,
   Search,
   Settings,
-  Bell,
-  Globe2,
-  HelpCircle,
-  Pencil,
   Trash2,
   UploadCloud,
-  Link2,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { adminApi, type ApiLocale, type ContentHistoryItem } from "@/lib/admin-api";
-import type { AdminContent, AdminMenuKey, PortfolioInfoContent, ProjectContentItem, TechnicalContentItem } from "@/types/admin";
+import { adminApi, type ApiLocale } from "@/lib/admin-api";
+import type {
+  AdminContent,
+  AdminMenuKey,
+  PortfolioInfoContent,
+  ProjectContentItem,
+  TechnicalContentItem,
+} from "@/types/admin";
 import type { ProjectItem, SkillItem } from "@/types/portfolio";
 import AdminDashboardMock from "./AdminDashboardMock";
-import PortfolioInfoEditor from "./PortfolioInfoEditor";
-import ProjectsEditor from "./ProjectsEditor";
-import TechnicalEditor from "./TechnicalEditor";
 
 function makeId(prefix: string): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -45,6 +43,22 @@ function makeId(prefix: string): string {
 
 function normalizeLocale(locale: string): ApiLocale {
   return locale.startsWith("th") ? "th" : "en";
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function normalizeTechnicalIcon(icon?: string): string | undefined {
+  if (!icon) return undefined;
+  const nextIcon = icon.trim();
+  if (!nextIcon) return undefined;
+  return isHttpUrl(nextIcon) ? nextIcon : undefined;
 }
 
 function isPortfolioInfo(value: unknown): value is PortfolioInfoContent {
@@ -74,21 +88,6 @@ function isTechnicalArray(value: unknown): value is TechnicalContentItem[] {
   );
 }
 
-function isProjectsArray(value: unknown): value is ProjectContentItem[] {
-  if (!Array.isArray(value)) return false;
-  return value.every(
-    (item) =>
-      item &&
-      typeof item === "object" &&
-      typeof item.id === "string" &&
-      typeof item.tag === "string" &&
-      typeof item.title === "string" &&
-      typeof item.description === "string" &&
-      Array.isArray(item.images) &&
-      item.images.every((image: unknown) => typeof image === "string"),
-  );
-}
-
 function normalizeProjectItem(raw: unknown): ProjectContentItem | null {
   if (!raw || typeof raw !== "object") return null;
   const item = raw as Record<string, unknown>;
@@ -112,34 +111,37 @@ function normalizeProjectItem(raw: unknown): ProjectContentItem | null {
     tag: item.tag,
     title: item.title,
     description: item.description,
+    image: typeof item.image === "string" ? item.image : images[0],
     images,
   };
 }
 
-function isHttpUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
+function sanitizeContentForSave(content: AdminContent): AdminContent {
+  return {
+    ...content,
+    technical: content.technical.map((item) => ({
+      ...item,
+      icon: normalizeTechnicalIcon(item.icon),
+    })),
+    projects: content.projects.map((project) => {
+      const normalizedImages = project.images
+        .map((image) => image.trim())
+        .filter((image) => image && isHttpUrl(image));
 
-function normalizeTechnicalIcon(icon?: string): string | undefined {
-  if (!icon) return undefined;
-  const nextIcon = icon.trim();
-  if (!nextIcon) return undefined;
-  return isHttpUrl(nextIcon) ? nextIcon : undefined;
-}
+      const fallbackImage =
+        project.image && isHttpUrl(project.image) ? project.image : undefined;
+      const primaryImage = normalizedImages[0] ?? fallbackImage;
+      const images = primaryImage
+        ? Array.from(new Set([primaryImage, ...normalizedImages]))
+        : normalizedImages;
 
-function isAdminContent(value: unknown): value is AdminContent {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Record<string, unknown>;
-  return (
-    isTechnicalArray(candidate.technical) &&
-    isProjectsArray(candidate.projects) &&
-    isPortfolioInfo(candidate.portfolioInfo)
-  );
+      return {
+        ...project,
+        image: primaryImage,
+        images,
+      };
+    }),
+  };
 }
 
 export default function BackofficePanel() {
@@ -167,6 +169,7 @@ export default function BackofficePanel() {
         tag: item.tag,
         title: item.title,
         description: item.description,
+        image: item.image,
         images: item.image ? [item.image] : [],
       })),
       portfolioInfo: {
@@ -184,18 +187,24 @@ export default function BackofficePanel() {
 
   const [activeMenu, setActiveMenu] = useState<AdminMenuKey>("dashboard");
   const [content, setContent] = useState<AdminContent>(fallbackContent);
-  const [status, setStatus] = useState(t("status.loading"));
   const [version, setVersion] = useState<number | undefined>(undefined);
-  const [historyItems, setHistoryItems] = useState<ContentHistoryItem[]>([]);
-  const [uploadedUrl, setUploadedUrl] = useState("");
+  const [status, setStatus] = useState(t("status.loading"));
   const [isBusy, setIsBusy] = useState(false);
   const [uiState, setUiState] = useState<"idle" | "loading" | "success" | "error">("loading");
   const [search, setSearch] = useState("");
-  const [quickProject, setQuickProject] = useState({
+
+  const [projectForm, setProjectForm] = useState({
     title: "",
     url: "",
     description: "",
     tag: "AI",
+    images: [] as string[],
+  });
+
+  const [technicalForm, setTechnicalForm] = useState({
+    title: "",
+    description: "",
+    icon: "",
   });
 
   const apiLocale = normalizeLocale(locale);
@@ -217,6 +226,15 @@ export default function BackofficePanel() {
     );
   });
 
+  const filteredTechnical = content.technical.filter((item) => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return true;
+    return (
+      item.title.toLowerCase().includes(keyword) ||
+      item.description.toLowerCase().includes(keyword)
+    );
+  });
+
   const loadContent = async () => {
     setIsBusy(true);
     setUiState("loading");
@@ -225,20 +243,31 @@ export default function BackofficePanel() {
     try {
       const response = await adminApi.getContent(apiLocale);
       const nextContent = response.data?.content;
-      if (isAdminContent(nextContent)) {
-        setContent(nextContent);
-      } else if (nextContent && typeof nextContent === "object") {
+
+      if (nextContent && typeof nextContent === "object") {
         const parsed = nextContent as Record<string, unknown>;
         const normalizedProjects = Array.isArray(parsed.projects)
-          ? parsed.projects.map(normalizeProjectItem).filter((item): item is ProjectContentItem => item !== null)
+          ? parsed.projects
+              .map(normalizeProjectItem)
+              .filter((item): item is ProjectContentItem => item !== null)
           : [];
 
-        setContent({
-          technical: isTechnicalArray(parsed.technical) ? parsed.technical : fallbackContent.technical,
-          projects: normalizedProjects.length > 0 ? normalizedProjects : fallbackContent.projects,
-          portfolioInfo: isPortfolioInfo(parsed.portfolioInfo) ? parsed.portfolioInfo : fallbackContent.portfolioInfo,
-        });
+        const contentFromApi: AdminContent = {
+          technical: isTechnicalArray(parsed.technical)
+            ? parsed.technical
+            : fallbackContent.technical,
+          projects:
+            normalizedProjects.length > 0
+              ? normalizedProjects
+              : fallbackContent.projects,
+          portfolioInfo: isPortfolioInfo(parsed.portfolioInfo)
+            ? parsed.portfolioInfo
+            : fallbackContent.portfolioInfo,
+        };
+
+        setContent(contentFromApi);
       }
+
       try {
         const technicalResponse = await adminApi.getTechnical(apiLocale);
         if (Array.isArray(technicalResponse.data?.items)) {
@@ -254,9 +283,9 @@ export default function BackofficePanel() {
           setVersion(technicalResponse.data?.version ?? response.data?.version);
         }
       } catch {
-        // keep technical from /api/admin/content as fallback
+        setVersion(response.data?.version);
       }
-      setVersion(response.data?.version);
+
       setStatus(t("status.loaded"));
       setUiState("success");
     } catch (error) {
@@ -295,51 +324,59 @@ export default function BackofficePanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiLocale, locale, router]);
 
-  const saveContent = async () => {
+  const createProject = async () => {
+    const title = projectForm.title.trim();
+    if (!title) {
+      setUiState("error");
+      setStatus(t("status.saveFailed"));
+      return;
+    }
+
+    const url = projectForm.url.trim();
+    const normalizedUrl = url && isHttpUrl(url) ? url : "";
+
+    const payloadProject: ProjectContentItem = {
+      id: makeId("project"),
+      tag: projectForm.tag.trim() || "GENERAL",
+      title,
+      description: projectForm.description.trim(),
+      image: normalizedUrl || projectForm.images[0],
+      images: Array.from(
+        new Set([
+          ...(normalizedUrl ? [normalizedUrl] : []),
+          ...projectForm.images.filter((image) => isHttpUrl(image)),
+        ]),
+      ),
+    };
+
+    const nextContent: AdminContent = {
+      ...content,
+      projects: [payloadProject, ...content.projects],
+    };
+
     setIsBusy(true);
     setUiState("loading");
     setStatus(t("status.saving"));
 
     try {
-      const sanitizedContent = {
-        ...content,
-        technical: content.technical.map((item) => ({
-          ...item,
-          icon: normalizeTechnicalIcon(item.icon),
-        })),
-        projects: content.projects.map((project) => {
-          const normalizedImages = project.images
-            .map((image) => image.trim())
-            .filter((image) => image && isHttpUrl(image));
-
-          const fallbackImage =
-            project.image && isHttpUrl(project.image) ? project.image : undefined;
-          const primaryImage = normalizedImages[0] ?? fallbackImage;
-          const images = primaryImage
-            ? Array.from(new Set([primaryImage, ...normalizedImages]))
-            : normalizedImages;
-
-          return {
-            ...project,
-            image: primaryImage,
-            images,
-          };
-        }),
-      };
-
+      const sanitized = sanitizeContentForSave(nextContent);
       const response = await adminApi.saveContent(apiLocale, {
         version,
-        content: sanitizedContent,
+        content: sanitized,
       });
+
+      setContent(sanitized);
       setVersion(response.data?.version ?? version);
+      setProjectForm({
+        title: "",
+        url: "",
+        description: "",
+        tag: "AI",
+        images: [],
+      });
       setStatus(t("status.saved"));
       setUiState("success");
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 409) {
-        setStatus(t("status.versionConflict"));
-        setUiState("error");
-        return;
-      }
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
@@ -352,14 +389,25 @@ export default function BackofficePanel() {
     }
   };
 
-  const publishContent = async () => {
+  const deleteProject = async (id: string) => {
+    const nextContent: AdminContent = {
+      ...content,
+      projects: content.projects.filter((project) => project.id !== id),
+    };
+
     setIsBusy(true);
     setUiState("loading");
-    setStatus(t("status.publishing"));
+    setStatus(t("status.saving"));
 
     try {
-      await adminApi.publishContent(apiLocale);
-      setStatus(t("status.published"));
+      const sanitized = sanitizeContentForSave(nextContent);
+      const response = await adminApi.saveContent(apiLocale, {
+        version,
+        content: sanitized,
+      });
+      setContent(sanitized);
+      setVersion(response.data?.version ?? version);
+      setStatus(t("status.saved"));
       setUiState("success");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -367,36 +415,14 @@ export default function BackofficePanel() {
         router.replace(`/${locale}/admin/login`);
         return;
       }
-      setStatus(t("status.publishFailed"));
+      setStatus(t("status.saveFailed"));
       setUiState("error");
     } finally {
       setIsBusy(false);
     }
   };
 
-  const loadHistory = async () => {
-    setIsBusy(true);
-    setUiState("loading");
-
-    try {
-      const response = await adminApi.getHistory(apiLocale);
-      setHistoryItems(response.data?.history ?? response.data?.items ?? []);
-      setStatus(t("status.historyLoaded"));
-      setUiState("success");
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        adminApi.clearToken();
-        router.replace(`/${locale}/admin/login`);
-        return;
-      }
-      setStatus(t("status.historyFailed"));
-      setUiState("error");
-    } finally {
-      setIsBusy(false);
-    }
-  };
-
-  const uploadProjectImages = async (projectId: string, files: FileList | null) => {
+  const uploadProjectFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
     setIsBusy(true);
@@ -412,24 +438,15 @@ export default function BackofficePanel() {
           : [];
 
       if (uploadedUrls.length === 0) {
-        setStatus(t("status.uploadFailed"));
         setUiState("error");
+        setStatus(t("status.uploadFailed"));
         return;
       }
 
-      setContent((prev) => ({
+      setProjectForm((prev) => ({
         ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === projectId
-            ? {
-                ...project,
-                images: [...project.images, ...uploadedUrls],
-                image: project.image || uploadedUrls[0],
-              }
-            : project,
-        ),
+        images: [...prev.images, ...uploadedUrls],
       }));
-      setUploadedUrl(uploadedUrls[uploadedUrls.length - 1] ?? "");
       setStatus(t("status.uploaded"));
       setUiState("success");
     } catch (error) {
@@ -438,60 +455,31 @@ export default function BackofficePanel() {
         router.replace(`/${locale}/admin/login`);
         return;
       }
-      setStatus(t("status.uploadFailed"));
       setUiState("error");
+      setStatus(t("status.uploadFailed"));
     } finally {
       setIsBusy(false);
     }
   };
 
-  const uploadTechnicalIcon = async (technicalId: string, file: File | null) => {
-    if (!file) return;
-    setIsBusy(true);
-    setUiState("loading");
-    setStatus(t("status.uploading"));
-
-    try {
-      const response = await adminApi.upload(file);
-      const iconUrl = response.data.url ?? response.data.urls?.[0];
-      if (!iconUrl) {
-        setStatus(t("status.uploadFailed"));
-        setUiState("error");
-        return;
-      }
-
-      setContent((prev) => ({
-        ...prev,
-        technical: prev.technical.map((item) =>
-          item.id === technicalId ? { ...item, icon: iconUrl } : item,
-        ),
-      }));
-      setUploadedUrl(iconUrl);
-      setStatus(t("status.uploaded"));
-      setUiState("success");
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        adminApi.clearToken();
-        router.replace(`/${locale}/admin/login`);
-        return;
-      }
-      setStatus(t("status.uploadFailed"));
+  const createTechnical = async () => {
+    const title = technicalForm.title.trim();
+    if (!title) {
       setUiState("error");
-    } finally {
-      setIsBusy(false);
+      setStatus(t("status.saveFailed"));
+      return;
     }
-  };
 
-  const createTechnicalItem = async () => {
     setIsBusy(true);
     setUiState("loading");
     setStatus(t("status.saving"));
+
     try {
       await adminApi.createTechnical(apiLocale, {
-        title: t("technical.defaultTitle"),
-        description: t("technical.defaultDescription"),
+        title,
+        description: technicalForm.description.trim(),
+        icon: normalizeTechnicalIcon(technicalForm.icon),
       });
-
       const technicalResponse = await adminApi.getTechnical(apiLocale);
       setContent((prev) => ({
         ...prev,
@@ -503,6 +491,7 @@ export default function BackofficePanel() {
         })),
       }));
       setVersion(technicalResponse.data.version ?? version);
+      setTechnicalForm({ title: "", description: "", icon: "" });
       setStatus(t("status.saved"));
       setUiState("success");
     } catch (error) {
@@ -518,39 +507,42 @@ export default function BackofficePanel() {
     }
   };
 
-  const saveTechnicalItem = async (id: string) => {
-    const item = content.technical.find((entry) => entry.id === id);
-    if (!item) return;
+  const uploadTechnicalIcon = async (file: File | null) => {
+    if (!file) return;
 
     setIsBusy(true);
     setUiState("loading");
-    setStatus(t("status.saving"));
+    setStatus(t("status.uploading"));
 
     try {
-      await adminApi.updateTechnical(apiLocale, id, {
-        title: item.title,
-        description: item.description,
-        icon: normalizeTechnicalIcon(item.icon),
-      });
-      setStatus(t("status.saved"));
+      const response = await adminApi.upload(file);
+      const iconUrl = response.data.url ?? response.data.urls?.[0] ?? "";
+      if (!iconUrl) {
+        setUiState("error");
+        setStatus(t("status.uploadFailed"));
+        return;
+      }
+      setTechnicalForm((prev) => ({ ...prev, icon: iconUrl }));
       setUiState("success");
+      setStatus(t("status.uploaded"));
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
         return;
       }
-      setStatus(t("status.saveFailed"));
       setUiState("error");
+      setStatus(t("status.uploadFailed"));
     } finally {
       setIsBusy(false);
     }
   };
 
-  const removeTechnicalItem = async (id: string) => {
+  const deleteTechnical = async (id: string) => {
     setIsBusy(true);
     setUiState("loading");
     setStatus(t("status.saving"));
+
     try {
       const response = await adminApi.deleteTechnical(apiLocale, id);
       setVersion(response.data.version ?? version);
@@ -573,49 +565,6 @@ export default function BackofficePanel() {
     }
   };
 
-  const exportContent = () => {
-    const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `portfolio-cms-${apiLocale}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const createQuickProject = () => {
-    const title = quickProject.title.trim();
-    if (!title) {
-      setUiState("error");
-      setStatus(t("status.saveFailed"));
-      return;
-    }
-
-    const url = quickProject.url.trim();
-    const isValidUrl = url ? isHttpUrl(url) : false;
-    const imageList = isValidUrl ? [url] : [];
-
-    setContent((prev) => ({
-      ...prev,
-      projects: [
-        {
-          id: makeId("project"),
-          tag: quickProject.tag.trim() || "GENERAL",
-          title,
-          description: quickProject.description.trim(),
-          image: isValidUrl ? url : undefined,
-          images: imageList,
-        },
-        ...prev.projects,
-      ],
-    }));
-
-    setQuickProject({ title: "", url: "", description: "", tag: "AI" });
-    setActiveMenu("projects");
-    setUiState("success");
-    setStatus(t("status.saved"));
-  };
-
   const logout = async () => {
     try {
       await adminApi.logout();
@@ -623,6 +572,9 @@ export default function BackofficePanel() {
       router.replace(`/${locale}/admin/login`);
     }
   };
+
+  const showProjectForm = activeMenu === "projects";
+  const showTechnicalForm = activeMenu === "technical";
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#131313] text-[#e5e2e1]">
@@ -690,7 +642,7 @@ export default function BackofficePanel() {
         <div className="mt-auto space-y-2 border-t border-[#4a4455]/15 pt-6">
           <button
             className="admin-btn-smooth mb-4 w-full rounded-lg bg-gradient-to-r from-[#7c3aed] to-[#0566d9] py-2.5 text-xs font-bold tracking-tight text-white"
-            onClick={createQuickProject}
+            onClick={() => setActiveMenu("projects")}
             type="button"
           >
             Create New Project
@@ -699,7 +651,11 @@ export default function BackofficePanel() {
             <HelpCircle size={18} />
             <span>Support</span>
           </button>
-          <button className="admin-btn-smooth flex w-full items-center gap-3 rounded-lg p-3 text-[#ccc3d8] hover:bg-[#2a2a2a] hover:text-[#e5e2e1]" onClick={logout} type="button">
+          <button
+            className="admin-btn-smooth flex w-full items-center gap-3 rounded-lg p-3 text-[#ccc3d8] hover:bg-[#2a2a2a] hover:text-[#e5e2e1]"
+            onClick={logout}
+            type="button"
+          >
             <LogOut size={18} />
             <span>{t("actions.logout")}</span>
           </button>
@@ -709,12 +665,12 @@ export default function BackofficePanel() {
       <main className="min-h-screen lg:ml-[280px]">
         <header className="fixed right-0 top-0 z-40 h-16 w-full border-b border-[#4a4455]/15 bg-[#131313]/70 px-4 backdrop-blur-xl lg:w-[calc(100%-280px)] lg:px-8">
           <div className="mx-auto flex h-full max-w-7xl items-center justify-between">
-            <div className="relative group">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#ccc3d8]" size={16} />
               <input
                 className="w-56 rounded-full border-none bg-[#1c1b1b] py-1.5 pl-9 pr-4 text-sm text-[#e5e2e1] placeholder:text-[#4a4455] focus:ring-1 focus:ring-[#7c3aed] md:w-64"
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search projects..."
+                placeholder={activeMenu === "technical" ? "Search technical..." : "Search projects..."}
                 type="text"
                 value={search}
               />
@@ -728,305 +684,330 @@ export default function BackofficePanel() {
 
         <div className="mx-auto max-w-7xl px-4 pb-20 pt-24 md:px-10">
           {activeMenu === "dashboard" ? <AdminDashboardMock /> : null}
+
           {activeMenu !== "dashboard" ? (
             <>
-          <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-extrabold tracking-tighter">Project Repository</h1>
-              <p className="mt-2 text-lg font-light text-[#ccc3d8]">Architecting digital experiences through precise engineering.</p>
-            </div>
-            <div className="rounded-xl border border-[#4a4455]/10 bg-[#1c1b1b] px-4 py-2">
-              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#d2bbff]" />
-              <span className="ml-2 text-xs uppercase tracking-widest text-[#ccc3d8]">Live Sync Enabled</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-8">
-            <section className="col-span-12 space-y-8 lg:col-span-5">
-              <div className="admin-card-smooth glass-panel relative overflow-hidden rounded-3xl p-8">
-                <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-[#7c3aed]/10 blur-[80px]" />
-                <div className="mb-8 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7c3aed]/20 text-[#d2bbff]">
-                    <PlusSquare size={18} />
-                  </div>
-                  <h2 className="text-xl font-bold text-[#e5e2e1]">New Project Details</h2>
+              <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <h1 className="text-4xl font-extrabold tracking-tighter">
+                    {activeMenu === "technical" ? "Technical Repository" : "Project Repository"}
+                  </h1>
+                  <p className="mt-2 text-lg font-light text-[#ccc3d8]">
+                    {activeMenu === "technical"
+                      ? "Manage stack items and icon assets from MinIO."
+                      : "Architecting digital experiences through precise engineering."}
+                  </p>
                 </div>
+                <div className="rounded-xl border border-[#4a4455]/10 bg-[#1c1b1b] px-4 py-2">
+                  <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#d2bbff]" />
+                  <span className="ml-2 text-xs uppercase tracking-widest text-[#ccc3d8]">
+                    {isBusy ? "Syncing" : "Live Sync Enabled"}
+                  </span>
+                </div>
+              </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">Project Title</label>
-                    <input
-                      className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
-                      onChange={(event) => setQuickProject((prev) => ({ ...prev, title: event.target.value }))}
-                      placeholder="E.g. Quantum Analytics Engine"
-                      type="text"
-                      value={quickProject.title}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">Project URL</label>
-                    <div className="relative">
-                      <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a4455]" size={14} />
-                      <input
-                        className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] py-3 pl-10 pr-4 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
-                        onChange={(event) => setQuickProject((prev) => ({ ...prev, url: event.target.value }))}
-                        placeholder="https://project-url.com"
-                        type="url"
-                        value={quickProject.url}
-                      />
+              {isBusy ? <div className="admin-loading-bar mb-3" /> : null}
+              <div className="mb-6 flex items-center gap-2 text-xs text-[#adc6ff]">
+                {uiState === "loading" ? <Loader2 className="animate-spin" size={14} /> : null}
+                {uiState === "success" ? <CheckCircle2 size={14} /> : null}
+                {uiState === "error" ? <OctagonAlert size={14} /> : null}
+                <p>{t("statusLabel", { status })}</p>
+              </div>
+
+              <div className="grid grid-cols-12 gap-8">
+                <section className="col-span-12 space-y-8 lg:col-span-5">
+                  <div className="admin-card-smooth glass-panel relative overflow-hidden rounded-3xl p-8">
+                    <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-[#7c3aed]/10 blur-[80px]" />
+                    <div className="mb-8 flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7c3aed]/20 text-[#d2bbff]">
+                        <PlusSquare size={18} />
+                      </div>
+                      <h2 className="text-xl font-bold text-[#e5e2e1]">
+                        {showTechnicalForm ? "New Technical Item" : "New Project Details"}
+                      </h2>
                     </div>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">Description</label>
-                    <textarea
-                      className="w-full resize-none rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
-                      onChange={(event) => setQuickProject((prev) => ({ ...prev, description: event.target.value }))}
-                      placeholder="Briefly describe the architectural vision and technical challenges..."
-                      rows={4}
-                      value={quickProject.description}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">Tag</label>
-                    <input
-                      className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
-                      onChange={(event) => setQuickProject((prev) => ({ ...prev, tag: event.target.value }))}
-                      placeholder="AI / INFRA / WEB3"
-                      type="text"
-                      value={quickProject.tag}
-                    />
-                  </div>
-                  <button
-                    className="admin-btn-smooth w-full rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#0566d9] py-4 text-xs font-bold tracking-widest text-[#e5e2e1] shadow-xl shadow-[#7c3aed]/20"
-                    onClick={createQuickProject}
-                    type="button"
-                  >
-                    DEPLOY TO REPOSITORY
-                  </button>
-                </div>
-              </div>
-            </section>
 
-            <section className="col-span-12 space-y-6 lg:col-span-7">
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-xl font-bold">Active Inventory</h2>
-                  <span className="rounded bg-[#2a2a2a] px-2.5 py-0.5 text-[10px] font-bold text-[#d2bbff]">{filteredProjects.length} TOTAL</span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {filteredProjects.slice(0, 6).map((project) => (
-                  <div key={project.id} className="admin-card-smooth glass-panel group flex items-center gap-6 rounded-2xl p-5 transition-all duration-300 hover:bg-[#2a2a2a]/40">
-                    <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-[#4a4455]/20 bg-[#0e0e0e]">
-                      {project.images[0] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-110 group-hover:opacity-100" src={project.images[0]} alt={project.title} />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[#4a4455]">
-                          <UploadCloud size={18} />
+                    {showProjectForm ? (
+                      <div className="space-y-6">
+                        <div>
+                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+                            Project Title
+                          </label>
+                          <input
+                            className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
+                            onChange={(event) =>
+                              setProjectForm((prev) => ({ ...prev, title: event.target.value }))
+                            }
+                            placeholder="E.g. Quantum Analytics Engine"
+                            type="text"
+                            value={projectForm.title}
+                          />
                         </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        <h3 className="truncate font-bold text-[#e5e2e1] transition-colors group-hover:text-[#d2bbff]">{project.title || "Untitled Project"}</h3>
-                        <span className="rounded bg-[#0566d9]/20 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-[#adc6ff]">
-                          {project.tag || "draft"}
-                        </span>
-                      </div>
-                      <p className="mb-3 line-clamp-1 text-xs text-[#ccc3d8]">{project.description || "-"}</p>
-                      <div className="text-[9px] font-bold uppercase tracking-wider text-[#4a4455]">{project.images.length} assets</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="admin-btn-smooth flex h-10 w-10 items-center justify-center rounded-full border border-[#4a4455]/20 text-[#ccc3d8] hover:bg-[#7c3aed] hover:text-white" onClick={() => setActiveMenu("projects")} type="button">
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        className="admin-btn-smooth flex h-10 w-10 items-center justify-center rounded-full border border-[#4a4455]/20 text-[#ccc3d8] hover:bg-[#93000a] hover:text-white"
-                        onClick={() =>
-                          setContent((prev) => ({ ...prev, projects: prev.projects.filter((item) => item.id !== project.id) }))
-                        }
-                        type="button"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <section className="admin-card-smooth rounded-3xl border border-[#4a4455]/20 bg-[#141317]/80 p-4 shadow-[0_0_80px_rgba(59,130,246,0.06)] transition-all duration-500 md:p-6">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      className="admin-btn-smooth inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#7c3aed] px-4 py-2 text-sm font-semibold text-[#ede0ff] disabled:opacity-50"
-                      disabled={isBusy}
-                      onClick={saveContent}
-                      type="button"
-                    >
-                      {isBusy ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                      {t("actions.save")}
-                    </button>
-                    <button className="admin-btn-smooth inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#4a4455]/30 px-4 py-2 text-sm text-[#ccc3d8] disabled:opacity-50" disabled={isBusy} onClick={loadContent} type="button">
-                      <RefreshCcw size={14} />
-                      {t("actions.load")}
-                    </button>
-                    <button className="admin-btn-smooth inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#4a4455]/30 px-4 py-2 text-sm text-[#ccc3d8] disabled:opacity-50" disabled={isBusy} onClick={publishContent} type="button">
-                      <Rocket size={14} />
-                      {t("actions.publish")}
-                    </button>
-                    <button className="admin-btn-smooth inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#4a4455]/30 px-4 py-2 text-sm text-[#ccc3d8] disabled:opacity-50" disabled={isBusy} onClick={loadHistory} type="button">
-                      <History size={14} />
-                      {t("actions.history")}
-                    </button>
-                    <button className="admin-btn-smooth inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#4a4455]/30 px-4 py-2 text-sm text-[#ccc3d8]" onClick={exportContent} type="button">
-                      <Download size={14} />
-                      {t("actions.export")}
-                    </button>
-                  </div>
-                </div>
-
-                {isBusy ? <div className="admin-loading-bar mb-3" /> : null}
-                <div className="mb-4 flex items-center gap-2 text-xs text-[#adc6ff]">
-                  {uiState === "loading" ? <Loader2 className="admin-status-pulse" size={14} /> : null}
-                  {uiState === "success" ? <CheckCircle2 size={14} /> : null}
-                  {uiState === "error" ? <OctagonAlert size={14} /> : null}
-                  <p>{t("statusLabel", { status })}</p>
-                </div>
-                {uploadedUrl ? <p className="mb-4 text-xs text-[#d2bbff]">{t("uploadedUrl", { url: uploadedUrl })}</p> : null}
-
-                {activeMenu === "technical" ? (
-                  <TechnicalEditor
-                    items={content.technical}
-                    labels={{
-                      sectionTitle: t("technical.title"),
-                      titleField: t("technical.fields.title"),
-                      descriptionField: t("technical.fields.description"),
-                      iconField: t("technical.fields.icon"),
-                      uploadIcon: t("technical.uploadIcon"),
-                      save: t("actions.save"),
-                      add: t("common.add"),
-                      remove: t("common.remove"),
-                    }}
-                    onAdd={createTechnicalItem}
-                    onChange={(id, field, value) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        technical: prev.technical.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
-                      }))
-                    }
-                    onSave={saveTechnicalItem}
-                    onUploadIcon={uploadTechnicalIcon}
-                    onRemove={removeTechnicalItem}
-                  />
-                ) : null}
-
-                {activeMenu === "projects" ? (
-                  <ProjectsEditor
-                    items={content.projects}
-                    labels={{
-                      sectionTitle: t("projects.title"),
-                      tagField: t("projects.fields.tag"),
-                      titleField: t("projects.fields.title"),
-                      descriptionField: t("projects.fields.description"),
-                      imageField: t("projects.fields.image"),
-                      imagesTitle: t("projects.imagesTitle"),
-                      addImageUrl: t("projects.addImageUrl"),
-                      uploadImages: t("projects.uploadImages"),
-                      add: t("common.add"),
-                      remove: t("common.remove"),
-                    }}
-                    onAdd={() =>
-                      setContent((prev) => ({
-                        ...prev,
-                        projects: [...prev.projects, { id: makeId("project"), tag: "", title: "", description: "", images: [] }],
-                      }))
-                    }
-                    onChange={(id, field, value) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        projects: prev.projects.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
-                      }))
-                    }
-                    onAddImage={(id) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        projects: prev.projects.map((item) =>
-                          item.id === id ? { ...item, images: [...item.images, ""] } : item,
-                        ),
-                      }))
-                    }
-                    onChangeImage={(id, index, value) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        projects: prev.projects.map((item) =>
-                          item.id === id
-                            ? {
-                                ...item,
-                                images: item.images.map((image, imageIndex) => (imageIndex === index ? value : image)),
+                        <div>
+                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+                            Project URL
+                          </label>
+                          <div className="relative">
+                            <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a4455]" size={14} />
+                            <input
+                              className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] py-3 pl-10 pr-4 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
+                              onChange={(event) =>
+                                setProjectForm((prev) => ({ ...prev, url: event.target.value }))
                               }
-                            : item,
-                        ),
-                      }))
-                    }
-                    onRemoveImage={(id, index) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        projects: prev.projects.map((item) =>
-                          item.id === id
-                            ? { ...item, images: item.images.filter((_, imageIndex) => imageIndex !== index) }
-                            : item,
-                        ),
-                      }))
-                    }
-                    onUploadImages={uploadProjectImages}
-                    onRemove={(id) =>
-                      setContent((prev) => ({ ...prev, projects: prev.projects.filter((item) => item.id !== id) }))
-                    }
-                  />
-                ) : null}
-
-                {activeMenu === "portfolioInfo" ? (
-                  <PortfolioInfoEditor
-                    info={content.portfolioInfo}
-                    labels={{
-                      sectionTitle: t("portfolioInfo.title"),
-                      ownerNameField: t("portfolioInfo.fields.ownerName"),
-                      titleField: t("portfolioInfo.fields.title"),
-                      subtitleField: t("portfolioInfo.fields.subtitle"),
-                      aboutField: t("portfolioInfo.fields.about"),
-                      emailField: t("portfolioInfo.fields.email"),
-                      phoneField: t("portfolioInfo.fields.phone"),
-                      locationField: t("portfolioInfo.fields.location"),
-                    }}
-                    onChange={(field, value) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        portfolioInfo: {
-                          ...prev.portfolioInfo,
-                          [field]: value,
-                        },
-                      }))
-                    }
-                  />
-                ) : null}
-              </section>
-
-              {historyItems.length > 0 ? (
-                <section className="admin-card-smooth rounded-3xl border border-[#4a4455]/20 bg-[#141317]/80 p-4 md:p-6">
-                  <h2 className="mb-3 text-base font-bold text-[#e5e2e1]">{t("historyTitle")}</h2>
-                  <div className="space-y-2 text-sm text-[#ccc3d8]">
-                    {historyItems.map((item) => (
-                      <div key={`${item.version}-${item.updated_at}`} className="rounded-xl border border-[#4a4455]/20 bg-[#161519] px-3 py-2">
-                        v{item.version} · {item.updated_at} · {item.updated_by ?? t("systemUser")}
+                              placeholder="https://project-url.com"
+                              type="url"
+                              value={projectForm.url}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+                            Description
+                          </label>
+                          <textarea
+                            className="w-full resize-none rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
+                            onChange={(event) =>
+                              setProjectForm((prev) => ({ ...prev, description: event.target.value }))
+                            }
+                            placeholder="Briefly describe the architectural vision and technical challenges..."
+                            rows={4}
+                            value={projectForm.description}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+                            Tag
+                          </label>
+                          <input
+                            className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
+                            onChange={(event) =>
+                              setProjectForm((prev) => ({ ...prev, tag: event.target.value }))
+                            }
+                            placeholder="AI / INFRA / WEB3"
+                            type="text"
+                            value={projectForm.tag}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+                            Project Images
+                          </label>
+                          <label className="admin-btn-smooth inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#4a4455]/40 bg-[#0e0e0e] px-3 py-3 text-xs font-semibold text-[#ccc3d8] hover:border-[#7c3aed]/60">
+                            Upload Multiple Images
+                            <input
+                              accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                              className="hidden"
+                              multiple
+                              onChange={(event) => uploadProjectFiles(event.target.files)}
+                              type="file"
+                            />
+                          </label>
+                          {projectForm.images.length > 0 ? (
+                            <div className="mt-3 space-y-2">
+                              {projectForm.images.map((image, index) => (
+                                <div key={`${image}-${index}`} className="rounded-lg border border-[#4a4455]/30 bg-[#111114] px-3 py-2 text-xs text-[#adc6ff]">
+                                  {image}
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                        <button
+                          className="admin-btn-smooth w-full rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#0566d9] py-4 text-xs font-bold tracking-widest text-[#e5e2e1] shadow-xl shadow-[#7c3aed]/20 disabled:opacity-60"
+                          disabled={isBusy}
+                          onClick={createProject}
+                          type="button"
+                        >
+                          DEPLOY TO REPOSITORY
+                        </button>
                       </div>
-                    ))}
+                    ) : null}
+
+                    {showTechnicalForm ? (
+                      <div className="space-y-6">
+                        <div>
+                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+                            Technical Title
+                          </label>
+                          <input
+                            className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
+                            onChange={(event) =>
+                              setTechnicalForm((prev) => ({ ...prev, title: event.target.value }))
+                            }
+                            placeholder="E.g. Redis"
+                            type="text"
+                            value={technicalForm.title}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+                            Description
+                          </label>
+                          <textarea
+                            className="w-full resize-none rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
+                            onChange={(event) =>
+                              setTechnicalForm((prev) => ({ ...prev, description: event.target.value }))
+                            }
+                            placeholder="Cache and memory store"
+                            rows={4}
+                            value={technicalForm.description}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+                            Icon URL
+                          </label>
+                          <input
+                            className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
+                            onChange={(event) =>
+                              setTechnicalForm((prev) => ({ ...prev, icon: event.target.value }))
+                            }
+                            placeholder="https://.../redis.svg"
+                            type="url"
+                            value={technicalForm.icon}
+                          />
+                        </div>
+                        <label className="admin-btn-smooth inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#4a4455]/40 bg-[#0e0e0e] px-3 py-3 text-xs font-semibold text-[#ccc3d8] hover:border-[#7c3aed]/60">
+                          Upload Icon (svg/png)
+                          <input
+                            accept="image/svg+xml,image/png"
+                            className="hidden"
+                            onChange={(event) =>
+                              uploadTechnicalIcon(event.target.files?.[0] ?? null)
+                            }
+                            type="file"
+                          />
+                        </label>
+                        <button
+                          className="admin-btn-smooth w-full rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#0566d9] py-4 text-xs font-bold tracking-widest text-[#e5e2e1] shadow-xl shadow-[#7c3aed]/20 disabled:opacity-60"
+                          disabled={isBusy}
+                          onClick={createTechnical}
+                          type="button"
+                        >
+                          ADD TO TECHNICAL STACK
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </section>
-              ) : null}
-            </section>
-          </div>
+
+                <section className="col-span-12 space-y-6 lg:col-span-7">
+                  {showProjectForm ? (
+                    <>
+                      <div className="flex items-center justify-between px-2">
+                        <div className="flex items-center gap-4">
+                          <h2 className="text-xl font-bold">Active Inventory</h2>
+                          <span className="rounded bg-[#2a2a2a] px-2.5 py-0.5 text-[10px] font-bold text-[#d2bbff]">
+                            {filteredProjects.length} TOTAL
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        {filteredProjects.map((project) => (
+                          <div
+                            key={project.id}
+                            className="admin-card-smooth glass-panel group flex items-center gap-6 rounded-2xl p-5 transition-all duration-300 hover:bg-[#2a2a2a]/40"
+                          >
+                            <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-[#4a4455]/20 bg-[#0e0e0e]">
+                              {project.images[0] ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  alt={project.title}
+                                  className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-110 group-hover:opacity-100"
+                                  src={project.images[0]}
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[#4a4455]">
+                                  <UploadCloud size={18} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-1 flex items-center gap-2">
+                                <h3 className="truncate font-bold text-[#e5e2e1] transition-colors group-hover:text-[#d2bbff]">
+                                  {project.title || "Untitled Project"}
+                                </h3>
+                                <span className="rounded bg-[#0566d9]/20 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-[#adc6ff]">
+                                  {project.tag || "draft"}
+                                </span>
+                              </div>
+                              <p className="mb-3 line-clamp-1 text-xs text-[#ccc3d8]">{project.description || "-"}</p>
+                              <div className="text-[9px] font-bold uppercase tracking-wider text-[#4a4455]">
+                                {project.images.length} assets
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                className="admin-btn-smooth flex h-10 w-10 items-center justify-center rounded-full border border-[#4a4455]/20 text-[#ccc3d8] hover:bg-[#7c3aed] hover:text-white"
+                                onClick={() =>
+                                  setProjectForm({
+                                    title: project.title,
+                                    url: project.image ?? "",
+                                    description: project.description,
+                                    tag: project.tag,
+                                    images: project.images,
+                                  })
+                                }
+                                type="button"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                className="admin-btn-smooth flex h-10 w-10 items-center justify-center rounded-full border border-[#4a4455]/20 text-[#ccc3d8] hover:bg-[#93000a] hover:text-white"
+                                onClick={() => deleteProject(project.id)}
+                                type="button"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+
+                  {showTechnicalForm ? (
+                    <>
+                      <div className="flex items-center justify-between px-2">
+                        <div className="flex items-center gap-4">
+                          <h2 className="text-xl font-bold">Technical Stack</h2>
+                          <span className="rounded bg-[#2a2a2a] px-2.5 py-0.5 text-[10px] font-bold text-[#d2bbff]">
+                            {filteredTechnical.length} TOTAL
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        {filteredTechnical.map((item) => (
+                          <div
+                            key={item.id}
+                            className="admin-card-smooth glass-panel group flex items-center gap-4 rounded-2xl p-4 transition-all duration-300 hover:bg-[#2a2a2a]/40"
+                          >
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[#4a4455]/20 bg-[#0e0e0e]">
+                              {item.icon ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img alt={item.title} className="h-8 w-8 object-contain" src={item.icon} />
+                              ) : (
+                                <Layers3 size={18} className="text-[#4a4455]" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="truncate font-bold text-[#e5e2e1]">{item.title}</h3>
+                              <p className="line-clamp-1 text-xs text-[#ccc3d8]">{item.description || "-"}</p>
+                            </div>
+                            <button
+                              className="admin-btn-smooth flex h-10 w-10 items-center justify-center rounded-full border border-[#4a4455]/20 text-[#ccc3d8] hover:bg-[#93000a] hover:text-white"
+                              onClick={() => deleteTechnical(item.id)}
+                              type="button"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+                </section>
+              </div>
             </>
           ) : null}
         </div>
