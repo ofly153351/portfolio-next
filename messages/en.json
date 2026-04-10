@@ -144,6 +144,7 @@
     "badge": "Backoffice CMS",
     "title": "Portfolio Content Manager",
     "subtitle": "Manage technical, project, and portfolio information from one admin panel.",
+    "controlLabel": "Control Center",
     "menu": {
       "technical": "Technical",
       "projects": "Projects",

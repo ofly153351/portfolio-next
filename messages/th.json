@@ -144,6 +144,7 @@
     "badge": "Backoffice CMS",
     "title": "จัดการเนื้อหา Portfolio",
     "subtitle": "แก้ไขข้อมูล technical, projects และข้อมูล portfolio ได้ในหน้าเดียว",
+    "controlLabel": "ศูนย์ควบคุม",
     "menu": {
       "technical": "Technical",
       "projects": "Projects",

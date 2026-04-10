@@ -1,4 +1,4 @@
-export type AdminMenuKey = "technical" | "projects" | "portfolioInfo";
+export type AdminMenuKey = "dashboard" | "technical" | "projects" | "portfolioInfo";
 
 export type TechnicalContentItem = {
   id: string;

@@ -3,7 +3,7 @@ import LoginForm from "../../../components/admin/LoginForm";
 
 export default async function AdminLoginPage() {
   const t = await getTranslations("Backoffice.login");
-
+ 
   return (
     <div className="min-h-screen bg-[#0a0a0a] px-4 py-10 text-[#e5e2e1] md:px-8">
       <div className="mx-auto max-w-md rounded-3xl border border-[#4a4455]/20 bg-[#141317]/80 p-6 backdrop-blur-sm">
