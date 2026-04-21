@@ -50,6 +50,14 @@
 
 ---
 
+## Response Rules
+- No reasoning. Just answer.
+- Return only necessary output
+- No explanation unless asked
+- Always respond with minimal code
+- No explanation unless asked
+- Prefer short answers
+
 ## 🌍 i18n
 - en (default), th (future)  
 - ❌ No hardcoded text  

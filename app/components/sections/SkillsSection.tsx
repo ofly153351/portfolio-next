@@ -8,9 +8,14 @@ import SectionHeading from "../ui/SectionHeading";
 const icons = [Layers3, Server, Code2, BrainCircuit];
 const glows = ["bg-[#d2bbff]/5", "bg-[#adc6ff]/5", "bg-[#eaddff]/5", "bg-[#7c3aed]/10"];
 
-export default function SkillsSection() {
+type SkillsSectionProps = {
+  items?: SkillItem[];
+};
+
+export default function SkillsSection({ items: itemsFromApi }: SkillsSectionProps) {
   const t = useTranslations("Portfolio.skills");
-  const items = t.raw("items") as SkillItem[];
+  const translatedItems = t.raw("items") as SkillItem[];
+  const items = itemsFromApi && itemsFromApi.length > 0 ? itemsFromApi : translatedItems;
 
   return (
     <section className="py-32" id="skills">

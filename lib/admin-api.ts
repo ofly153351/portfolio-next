@@ -11,6 +11,11 @@ export type AdminContentResponse = {
   content: AdminContent;
 };
 
+export type PublicContentResponse = {
+  locale: ApiLocale;
+  content: AdminContent;
+};
+
 export type SaveContentPayload = {
   version?: number;
   content: AdminContent & {
@@ -184,7 +189,7 @@ export const adminApi = {
   },
 
   getPublicContent: (locale: ApiLocale) =>
-    api.get("/api/content", { params: { locale } }),
+    api.get<PublicContentResponse>("/api/content", { params: { locale } }),
 
   getTechnical: (locale: ApiLocale) =>
     api.get<TechnicalListResponse>("/api/admin/technical", { params: { locale } }),

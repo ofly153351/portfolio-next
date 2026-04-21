@@ -2,10 +2,18 @@
 
 import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { HeroContent } from "@/types/portfolio";
 import AssistantCard from "../ai/AssistantCard";
 
-export default function HeroSection() {
+type HeroSectionProps = {
+  content?: HeroContent;
+};
+
+export default function HeroSection({ content }: HeroSectionProps) {
   const t = useTranslations("Portfolio.hero");
+  const name = content?.ownerName?.trim() || t("name");
+  const subtitle = content?.subtitle?.trim() || t("subtitle");
+  const description = content?.about?.trim() || t("description");
 
   return (
     <section className="grid min-h-[819px] grid-cols-1 items-center gap-16 lg:grid-cols-2">
@@ -15,10 +23,10 @@ export default function HeroSection() {
             {t("badge")}
           </span>
           <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight md:text-7xl">
-            {t("titlePrefix")} <span className="text-gradient">{t("name")}</span>
+            {t("titlePrefix")} <span className="text-gradient">{name}</span>
           </h1>
-          <h2 className="text-2xl font-medium text-[#ccc3d8] md:text-3xl">{t("subtitle")}</h2>
-          <p className="max-w-lg text-lg leading-relaxed text-[#ccc3d8]/80">{t("description")}</p>
+          <h2 className="text-2xl font-medium text-[#ccc3d8] md:text-3xl">{subtitle}</h2>
+          <p className="max-w-lg text-lg leading-relaxed text-[#ccc3d8]/80">{description}</p>
         </div>
 
         <div className="flex flex-wrap gap-4">

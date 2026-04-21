@@ -2,12 +2,18 @@ import FloatingChatButton from "../components/ai/FloatingChatButton";
 import SiteFooter from "../components/layout/SiteFooter";
 import SiteNavbar from "../components/layout/SiteNavbar";
 import ArchitectureSection from "../components/sections/ArchitectureSection";
-import HeroSection from "../components/sections/HeroSection";
+import LandingIntroClient from "../components/sections/LandingIntroClient";
 import ProjectsSection from "../components/sections/ProjectsSection";
-import SkillsSection from "../components/sections/SkillsSection";
 import AOSProvider from "../components/ui/AOSProvider";
 
-export default function HomePage() {
+type HomePageProps = {
+  params: Promise<{ locale: string }> | { locale: string };
+};
+
+export default async function HomePage({ params }: HomePageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const locale = resolvedParams?.locale?.startsWith("th") ? "th" : "en";
+
   return (
     <div className="ambient-root selection:bg-[#7c3aed]/30">
       <div className="ambient-glow-layer">
@@ -19,8 +25,7 @@ export default function HomePage() {
         <AOSProvider />
         <SiteNavbar />
         <main className="relative mx-auto max-w-7xl overflow-hidden px-4 pt-32 md:px-8">
-          <HeroSection />
-          <SkillsSection />
+          <LandingIntroClient locale={locale} />
           <ProjectsSection />
           <ArchitectureSection />
           <SiteFooter />

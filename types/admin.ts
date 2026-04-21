@@ -31,3 +31,19 @@ export type AdminContent = {
   projects: ProjectContentItem[];
   portfolioInfo: PortfolioInfoContent;
 };
+
+export type AdminUiState = "idle" | "loading" | "success" | "error";
+
+export type ProjectFormState = {
+  title: string;
+  url: string;
+  description: string;
+  tag: string;
+  images: string[];
+};
+
+export type TechnicalFormState = {
+  title: string;
+  description: string;
+  icon: string;
+};
