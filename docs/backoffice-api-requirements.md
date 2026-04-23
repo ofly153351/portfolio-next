@@ -17,6 +17,10 @@
 - `PUT /api/admin/content?locale=en|th`
 - `POST /api/admin/content/publish?locale=en|th`
 - `GET /api/admin/content/history?locale=en|th`
+- `GET /api/admin/technical?locale=en|th`
+- `POST /api/admin/technical?locale=en|th`
+- `PUT /api/admin/technical/{id}?locale=en|th`
+- `DELETE /api/admin/technical/{id}?locale=en|th`
 - `POST /api/admin/upload`
 - `GET /api/content?locale=en|th`
 - `GET ws://localhost:8080/api/chat/ws`
@@ -80,32 +84,35 @@ Response 200:
 {
   "locale": "en",
   "version": 12,
-  "updated_at": "2026-04-09T15:00:00Z",
+  "updated_at": "2026-04-09T14:00:00Z",
   "content": {
     "technical": [
       {
         "id": "tech_1",
-        "title": "Angular",
-        "description": "Enterprise-grade reactive frontend architecture."
+        "title": "Go",
+        "description": "Backend API",
+        "icon": "http://localhost:9000/portfolio/technical/go.svg"
       }
     ],
     "projects": [
       {
         "id": "proj_1",
-        "tag": "AI PLATFORM",
-        "title": "Nexus AI Dashboard",
-        "description": "...",
+        "tag": "AI",
+        "title": "Portfolio CMS",
+        "description": "Backoffice + AI chat",
+        "projectUrl": "https://portfolio.example.com",
+        "image": "http://localhost:9000/portfolio/projects/cover.jpg",
         "images": [
-          "https://cdn.example.com/portfolio/projects/cover.jpg",
-          "https://cdn.example.com/portfolio/projects/detail-1.jpg"
+          "http://localhost:9000/portfolio/projects/cover.jpg",
+          "http://localhost:9000/portfolio/projects/demo.gif"
         ]
       }
     ],
     "portfolioInfo": {
-      "ownerName": "Peerapat",
-      "title": "Peerapat",
-      "subtitle": "Fullstack Developer with AI Integration",
-      "about": "...",
+      "ownerName": "",
+      "title": "",
+      "subtitle": "",
+      "about": "",
       "contactEmail": "",
       "contactPhone": "",
       "location": ""
@@ -139,7 +146,14 @@ Response 200:
 {
   "ok": true,
   "version": 13,
-  "updated_at": "2026-04-09T15:10:00Z"
+  "updated_at": "2026-04-09T14:10:00Z"
+}
+```
+Response 409:
+```json
+{
+  "error": "version_conflict",
+  "current_version": 13
 }
 ```
 
@@ -149,7 +163,7 @@ Response 200:
 {
   "ok": true,
   "published_version": 13,
-  "published_at": "2026-04-09T15:15:00Z"
+  "published_at": "2026-04-09T14:15:00Z"
 }
 ```
 
@@ -157,16 +171,18 @@ Response 200:
 Response 200:
 ```json
 {
-  "items": [
+  "locale": "en",
+  "history": [
     {
+      "locale": "en",
       "version": 13,
-      "updated_at": "2026-04-09T15:10:00Z",
-      "updated_by": "admin"
-    },
-    {
-      "version": 12,
-      "updated_at": "2026-04-09T14:00:00Z",
-      "updated_by": "admin"
+      "updated_by": "admin",
+      "updated_at": "2026-04-09T14:10:00Z",
+      "content": {
+        "technical": [],
+        "projects": [],
+        "portfolioInfo": {}
+      }
     }
   ]
 }
@@ -194,6 +210,55 @@ Response 200:
     "projects": [],
     "portfolioInfo": {}
   }
+}
+```
+
+### `GET /api/admin/technical?locale=en|th`
+Response 200:
+```json
+{
+  "locale": "en",
+  "version": 12,
+  "updated_at": "2026-04-09T14:00:00Z",
+  "items": [
+    {
+      "id": "tech_1",
+      "title": "Go",
+      "description": "Backend API",
+      "icon": "http://localhost:9000/portfolio/technical/go.svg"
+    }
+  ]
+}
+```
+
+### `POST /api/admin/technical?locale=en|th`
+Request:
+```json
+{
+  "title": "Redis",
+  "description": "Cache and memory store",
+  "icon": "http://localhost:9000/portfolio/technical/redis.svg"
+}
+```
+
+### `PUT /api/admin/technical/{id}?locale=en|th`
+Request:
+```json
+{
+  "title": "Redis",
+  "description": "Cache, queue, memory",
+  "icon": "http://localhost:9000/portfolio/technical/redis.svg"
+}
+```
+
+### `DELETE /api/admin/technical/{id}?locale=en|th`
+Response 200:
+```json
+{
+  "ok": true,
+  "version": 13,
+  "updated_at": "2026-04-09T14:10:00Z",
+  "deleted_id": "tech_1"
 }
 ```
 
@@ -247,6 +312,23 @@ export const adminApi = {
     });
   },
 
+  getTechnical: (locale: "en" | "th") =>
+    api.get("/api/admin/technical", { params: { locale } }),
+
+  createTechnical: (
+    locale: "en" | "th",
+    payload: { title: string; description: string; icon?: string },
+  ) => api.post("/api/admin/technical", payload, { params: { locale } }),
+
+  updateTechnical: (
+    locale: "en" | "th",
+    id: string,
+    payload: { title: string; description: string; icon?: string },
+  ) => api.put(`/api/admin/technical/${id}`, payload, { params: { locale } }),
+
+  deleteTechnical: (locale: "en" | "th", id: string) =>
+    api.delete(`/api/admin/technical/${id}`, { params: { locale } }),
+
   getPublicContent: (locale: "en" | "th") =>
     api.get("/api/content", { params: { locale } }),
 };
@@ -257,4 +339,5 @@ export const adminApi = {
 ## Note
 - รูป project จะเก็บใน MinIO ฝั่ง backend และคืน URL กลับมาให้ frontend เก็บใน `projects[].image`
 - รูป project จะเก็บใน MinIO ฝั่ง backend และคืน URL กลับมาให้ frontend เก็บใน `projects[].images[]`
+- URL project ปลายทางให้เก็บใน `projects[].projectUrl`
 - หากใช้ cookie session ให้ตั้ง `httpOnly + secure + sameSite=lax`

@@ -1,4 +1,4 @@
-# Peerapat Portfolio (Next.js)
+# Phiraphat Portfolio (Next.js)
 
 A multilingual portfolio web app built with Next.js App Router. It provides a polished public portfolio experience and a backoffice panel for managing profile, skills, and project content through API-driven data.
 

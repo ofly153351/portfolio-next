@@ -53,6 +53,13 @@ function normalizeTechnicalIcon(icon?: string): string | undefined {
   return isHttpUrl(nextIcon) ? nextIcon : undefined;
 }
 
+function normalizeProjectUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  const nextUrl = url.trim();
+  if (!nextUrl) return undefined;
+  return isHttpUrl(nextUrl) ? nextUrl : undefined;
+}
+
 function isPortfolioInfo(value: unknown): value is PortfolioInfoContent {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Record<string, unknown>;
@@ -103,6 +110,12 @@ function normalizeProjectItem(raw: unknown): ProjectContentItem | null {
     tag: item.tag,
     title: item.title,
     description: item.description,
+    projectUrl:
+      typeof item.projectUrl === "string"
+        ? normalizeProjectUrl(item.projectUrl)
+        : typeof item.url === "string"
+          ? normalizeProjectUrl(item.url)
+          : undefined,
     image: typeof item.image === "string" ? item.image : images[0],
     images,
   };
@@ -119,6 +132,7 @@ function sanitizeContentForSave(content: AdminContent): AdminContent {
       const normalizedImages = project.images
         .map((image) => image.trim())
         .filter((image) => image && isHttpUrl(image));
+      const projectUrl = normalizeProjectUrl(project.projectUrl);
 
       const fallbackImage =
         project.image && isHttpUrl(project.image) ? project.image : undefined;
@@ -129,6 +143,7 @@ function sanitizeContentForSave(content: AdminContent): AdminContent {
 
       return {
         ...project,
+        projectUrl,
         image: primaryImage,
         images,
       };
@@ -315,13 +330,9 @@ export default function BackofficePanel() {
       tag: projectForm.tag.trim() || "GENERAL",
       title,
       description: projectForm.description.trim(),
-      image: normalizedUrl || projectForm.images[0],
-      images: Array.from(
-        new Set([
-          ...(normalizedUrl ? [normalizedUrl] : []),
-          ...projectForm.images.filter((image) => isHttpUrl(image)),
-        ]),
-      ),
+      projectUrl: normalizedUrl || undefined,
+      image: projectForm.images.find((image) => isHttpUrl(image)),
+      images: Array.from(new Set(projectForm.images.filter((image) => isHttpUrl(image)))),
     };
 
     const nextContent: AdminContent = {
@@ -339,6 +350,7 @@ export default function BackofficePanel() {
         version,
         content: sanitized,
       });
+      await adminApi.publishContent(apiLocale);
 
       setContent(sanitized);
       setVersion(response.data?.version ?? version);
@@ -380,6 +392,7 @@ export default function BackofficePanel() {
         version,
         content: sanitized,
       });
+      await adminApi.publishContent(apiLocale);
       setContent(sanitized);
       setVersion(response.data?.version ?? version);
       setStatus(t("status.saved"));
@@ -455,6 +468,7 @@ export default function BackofficePanel() {
         description: technicalForm.description.trim(),
         icon: normalizeTechnicalIcon(technicalForm.icon),
       });
+      await adminApi.publishContent(apiLocale);
       const technicalResponse = await adminApi.getTechnical(apiLocale);
       setContent((prev) => ({
         ...prev,
@@ -520,6 +534,7 @@ export default function BackofficePanel() {
 
     try {
       const response = await adminApi.deleteTechnical(apiLocale, id);
+      await adminApi.publishContent(apiLocale);
       setVersion(response.data.version ?? version);
       setContent((prev) => ({
         ...prev,
@@ -559,6 +574,7 @@ export default function BackofficePanel() {
         version,
         content: sanitized,
       });
+      await adminApi.publishContent(apiLocale);
       setVersion(response.data?.version ?? version);
       setStatus(t("status.saved"));
       setUiState("success");

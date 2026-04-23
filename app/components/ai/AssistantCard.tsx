@@ -33,6 +33,7 @@ export default function AssistantCard() {
   const activeReplyIdRef = useRef<string | null>(null);
   const isStreamingRef = useRef(false);
   const tokenQueueRef = useRef<string[]>([]);
+  const pendingTextRef = useRef("");
   const tokenDrainTimerRef = useRef<number | null>(null);
   const pendingDoneUsageRef = useRef<ChatUsage | undefined>(undefined);
   const messageIdRef = useRef(0);
@@ -49,14 +50,14 @@ export default function AssistantCard() {
     if (!scrollRef.current) return;
     scrollRef.current.scrollTo({
       top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
+      behavior: isStreaming ? "auto" : "smooth",
     });
   }, [messages, isStreaming]);
 
   useEffect(
     () => () => {
       if (tokenDrainTimerRef.current !== null) {
-        window.clearInterval(tokenDrainTimerRef.current);
+        window.clearTimeout(tokenDrainTimerRef.current);
         tokenDrainTimerRef.current = null;
       }
       wsRef.current?.close();
@@ -97,20 +98,33 @@ export default function AssistantCard() {
   const startTokenDrain = () => {
     if (tokenDrainTimerRef.current !== null) return;
 
-    tokenDrainTimerRef.current = window.setInterval(() => {
-      const nextToken = tokenQueueRef.current.shift();
-      if (nextToken) {
-        appendToken(nextToken);
+    const nextDelay = (char: string): number => {
+      if (char === "\n") return 170;
+      if (/[.!?]/.test(char)) return 150;
+      if (/[,;:]/.test(char)) return 90;
+      return 24;
+    };
+
+    const tick = () => {
+      if (!pendingTextRef.current && tokenQueueRef.current.length > 0) {
+        pendingTextRef.current = tokenQueueRef.current.join("");
+        tokenQueueRef.current = [];
       }
 
-      if (tokenQueueRef.current.length === 0) {
-        if (tokenDrainTimerRef.current !== null) {
-          window.clearInterval(tokenDrainTimerRef.current);
-          tokenDrainTimerRef.current = null;
-        }
+      if (!pendingTextRef.current) {
+        tokenDrainTimerRef.current = null;
         finalizeStreamIfDone();
+        return;
       }
-    }, 1000);
+
+      const char = pendingTextRef.current[0];
+      pendingTextRef.current = pendingTextRef.current.slice(1);
+      appendToken(char);
+
+      tokenDrainTimerRef.current = window.setTimeout(tick, nextDelay(char));
+    };
+
+    tokenDrainTimerRef.current = window.setTimeout(tick, 0);
   };
 
   const connectSocket = () => {
@@ -176,15 +190,17 @@ export default function AssistantCard() {
 
       if (data.type === "done") {
         pendingDoneUsageRef.current = data.usage;
+        startTokenDrain ();
         finalizeStreamIfDone();
         return;
       }
 
       if (data.type === "error") {
         tokenQueueRef.current = [];
+        pendingTextRef.current = "";
         pendingDoneUsageRef.current = undefined;
         if (tokenDrainTimerRef.current !== null) {
-          window.clearInterval(tokenDrainTimerRef.current);
+          window.clearTimeout(tokenDrainTimerRef.current);
           tokenDrainTimerRef.current = null;
         }
         setIsStreaming(false);
@@ -244,8 +260,9 @@ export default function AssistantCard() {
     setUsage(undefined);
     pendingDoneUsageRef.current = undefined;
     tokenQueueRef.current = [];
+    pendingTextRef.current = "";
     if (tokenDrainTimerRef.current !== null) {
-      window.clearInterval(tokenDrainTimerRef.current);
+      window.clearTimeout(tokenDrainTimerRef.current);
       tokenDrainTimerRef.current = null;
     }
     setActiveReplyId(replyId);

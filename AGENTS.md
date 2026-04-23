@@ -1,8 +1,8 @@
 <!-- BEGIN:nextjs-agent-rules -->
-# 🤖 Peerapat Portfolio AI (Frontend)
+# 🤖 Phiraphat Portfolio AI (Frontend)
 
 ## 🧠 Purpose
-- Introduce Peerapat
+- Introduce Phiraphat
 - Showcase skills & projects
 - Guide users with smooth AI-like interaction
 

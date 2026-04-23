@@ -1,6 +1,6 @@
 {
   "Hero": {
-    "title": "Hi, I'm Peerapat",
+    "title": "Hi, I'm Phiraphat",
     "subtitle": "Fullstack Developer with AI",
     "name": "Phiraphat",
     "project": "Projects",
@@ -10,7 +10,7 @@
   },
   "Portfolio": {
     "nav": {
-      "brand": "Peerapat",
+      "brand": "Phiraphat",
       "projects": "Projects",
       "experience": "Experience",
       "contact": "Contact",
@@ -21,15 +21,15 @@
     "hero": {
       "badge": "Available for freelance",
       "titlePrefix": "Hi, I'm",
-      "name": "Peerapat",
+      "name": "Phiraphat",
       "subtitle": "Fullstack Developer with AI Integration",
       "description": "I architect digital solutions where high-performance engineering meets intelligent automation. Transforming complex logic into seamless user experiences.",
       "viewProjects": "View Projects",
       "getInTouch": "Get in Touch"
     },
     "ai": {
-      "version": "Peerapat-Assistant-v1.0",
-      "response": "I can help you explore Peerapat's portfolio. Would you like to see technical stack details or specific AI-driven projects?",
+      "version": "Phiraphat-Assistant-v1.0",
+      "response": "I can help you explore Phiraphat's portfolio. Would you like to see technical stack details or specific AI-driven projects?",
       "thinking": "Thinking",
       "sendAria": "Send message",
       "placeholder": "Ask me anything...",
@@ -134,7 +134,7 @@
       }
     },
     "footer": {
-      "copyright": "© 2026 Peerapat. Digital Architect.",
+      "copyright": "© 2026 Phiraphat. Digital Architect.",
       "github": "Github",
       "linkedin": "LinkedIn",
       "twitter": "Twitter"
@@ -238,7 +238,7 @@
   },
   "WorksPage": {
     "nav": {
-      "brand": "Peerapat",
+      "brand": "Phiraphat",
       "work": "Work",
       "about": "About",
       "contact": "Contact",
@@ -320,7 +320,7 @@
       "github": "Github",
       "linkedin": "LinkedIn",
       "twitter": "Twitter",
-      "copyright": "© 2026 Peerapat. Built with Intentional Asymmetry."
+      "copyright": "© 2026 Phiraphat. Built with Intentional Asymmetry."
     }
   },
   "WorksSlug": {
@@ -328,7 +328,7 @@
       "nova-intelligence": {
         "slug": "nova-intelligence",
         "nav": {
-          "brand": "Peerapat",
+          "brand": "Phiraphat",
           "work": "Work",
           "about": "About",
           "contact": "Contact",
@@ -449,11 +449,11 @@
           "backToProjects": "Back to Projects"
         },
         "footer": {
-          "brand": "Peerapat",
+          "brand": "Phiraphat",
           "github": "GitHub",
           "linkedin": "LinkedIn",
           "twitter": "Twitter",
-          "copyright": "© 2026 Peerapat. Built with light and depth."
+          "copyright": "© 2026 Phiraphat. Built with light and depth."
         }
       }
     }

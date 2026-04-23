@@ -12,6 +12,7 @@ export type ProjectContentItem = {
   tag: string;
   title: string;
   description: string;
+  projectUrl?: string;
   image?: string;
   images: string[];
 };

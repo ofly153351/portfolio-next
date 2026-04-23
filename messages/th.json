@@ -1,6 +1,6 @@
 {
   "Hero": {
-    "title": "Hi, I'm Peerapat",
+    "title": "Hi, I'm Phiraphat",
     "subtitle": "Fullstack Developer with AI",
     "name": "พีรพัทธ",
     "project": "โปรเจกต์",
@@ -28,7 +28,7 @@
       "getInTouch": "ติดต่อผม"
     },
     "ai": {
-      "version": "Peerapat-Assistant-v1.0",
+      "version": "Phiraphat-Assistant-v1.0",
       "response": "ผมช่วยพาคุณสำรวจพอร์ตของพีรพัทธได้ครับ อยากดูสแต็กเทคนิคหรือโปรเจกต์ที่ขับเคลื่อนด้วย AI ก่อนดีครับ",
       "thinking": "กำลังคิดคำตอบ",
       "sendAria": "ส่งข้อความ",

@@ -37,7 +37,7 @@ const mockProjects: MockProject[] = [
     title: "Luminous Cloud Connect",
     status: "Archived",
     description: "Legacy cloud integration moved to cold storage.",
-    contributors: "Peerapat",
+    contributors: "Phiraphat",
     updatedAt: "Yesterday",
   },
 ];
@@ -70,7 +70,7 @@ export default function AdminDashboardMock() {
           Architect&apos;s <span className="text-gradient">Dashboard</span>
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-[#ccc3d8]">
-          Welcome back, Peerapat. Your digital ecosystem is thriving with stable infrastructure and active AI engagement.
+          Welcome back, Phiraphat. Your digital ecosystem is thriving with stable infrastructure and active AI engagement.
         </p>
       </section>
 
