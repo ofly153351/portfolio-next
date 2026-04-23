@@ -1,6 +1,7 @@
 export type SkillItem = {
   title: string;
   description: string;
+  icon?: string;
 };
 
 export type HeroContent = {

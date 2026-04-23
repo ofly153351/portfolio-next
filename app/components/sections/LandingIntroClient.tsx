@@ -33,6 +33,7 @@ export default function LandingIntroClient({ locale }: LandingIntroClientProps) 
         const mappedSkills = (content.technical ?? []).map((item) => ({
           title: item.title,
           description: item.description,
+          icon: item.icon,
         }));
         setSkillItems(mappedSkills.length > 0 ? mappedSkills : undefined);
       } catch {
