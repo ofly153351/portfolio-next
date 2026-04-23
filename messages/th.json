@@ -219,7 +219,10 @@
         "about": "เกี่ยวกับ",
         "email": "อีเมลติดต่อ",
         "phone": "เบอร์ติดต่อ",
-        "location": "ที่อยู่/โลเคชัน"
+        "location": "ที่อยู่/โลเคชัน",
+        "github": "ลิงก์ GitHub",
+        "linkedin": "ลิงก์ LinkedIn",
+        "instagram": "ลิงก์ Instagram"
       }
     },
     "login": {

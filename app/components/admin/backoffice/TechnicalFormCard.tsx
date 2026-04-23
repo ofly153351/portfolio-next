@@ -1,6 +1,15 @@
 import { PlusSquare } from "lucide-react";
 import type { TechnicalFormState } from "@/types/admin";
 
+function resolvePreviewSrc(icon: string): string {
+  const value = icon.trim();
+  if (!value) return "";
+  if (value.startsWith("<svg")) {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(value)}`;
+  }
+  return value;
+}
+
 type TechnicalFormCardProps = {
   isBusy: boolean;
   form: TechnicalFormState;
@@ -16,6 +25,8 @@ export default function TechnicalFormCard({
   onUploadIcon,
   onSubmit,
 }: TechnicalFormCardProps) {
+  const previewSrc = resolvePreviewSrc(form.icon);
+
   return (
     <div className="admin-card-smooth glass-panel relative overflow-hidden rounded-3xl p-8">
       <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-[#7c3aed]/10 blur-[80px]" />
@@ -55,16 +66,28 @@ export default function TechnicalFormCard({
 
         <div>
           <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
-            Icon URL
+            Icon URL or SVG
           </label>
-          <input
+          <textarea
             className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] px-4 py-3 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
             onChange={(event) => onChange({ ...form, icon: event.target.value })}
-            placeholder="https://.../redis.svg"
-            type="url"
+            placeholder="https://.../redis.svg or <svg ...>...</svg>"
+            rows={4}
             value={form.icon}
           />
         </div>
+
+        {previewSrc ? (
+          <div className="rounded-2xl border border-[#4a4455]/20 bg-[#0e0e0e] p-4">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+              Icon Preview
+            </p>
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f5f7fb] shadow-inner shadow-black/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt="Technical icon preview" className="h-10 w-10 object-contain" src={previewSrc} />
+            </div>
+          </div>
+        ) : null}
 
         <label className="admin-btn-smooth inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#4a4455]/40 bg-[#0e0e0e] px-3 py-3 text-xs font-semibold text-[#ccc3d8] hover:border-[#7c3aed]/60">
           Upload Icon (svg/png)

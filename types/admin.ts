@@ -25,6 +25,9 @@ export type PortfolioInfoContent = {
   contactEmail: string;
   contactPhone: string;
   location: string;
+  github: string;
+  linkedin: string;
+  instagram: string;
 };
 
 export type AdminContent = {

@@ -219,7 +219,10 @@
         "about": "About",
         "email": "Contact email",
         "phone": "Contact phone",
-        "location": "Location"
+        "location": "Location",
+        "github": "GitHub URL",
+        "linkedin": "LinkedIn URL",
+        "instagram": "Instagram URL"
       }
     },
     "login": {

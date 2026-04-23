@@ -53,6 +53,22 @@ function normalizeTechnicalIcon(icon?: string): string | undefined {
   return isHttpUrl(nextIcon) ? nextIcon : undefined;
 }
 
+function isSvgMarkup(value?: string): boolean {
+  if (!value) return false;
+  return value.trim().startsWith("<svg");
+}
+
+function createSvgFile(markup: string): File {
+  const normalized = markup.trim();
+  const svgWithNamespace = normalized.includes("xmlns=")
+    ? normalized
+    : normalized.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+
+  return new File([svgWithNamespace], `technical-icon-${Date.now()}.svg`, {
+    type: "image/svg+xml",
+  });
+}
+
 function normalizeProjectUrl(url?: string): string | undefined {
   if (!url) return undefined;
   const nextUrl = url.trim();
@@ -60,18 +76,34 @@ function normalizeProjectUrl(url?: string): string | undefined {
   return isHttpUrl(nextUrl) ? nextUrl : undefined;
 }
 
-function isPortfolioInfo(value: unknown): value is PortfolioInfoContent {
-  if (!value || typeof value !== "object") return false;
+function normalizeOptionalHttpUrl(url?: string): string {
+  if (!url) return "";
+  const nextUrl = url.trim();
+  if (!nextUrl) return "";
+  return isHttpUrl(nextUrl) ? nextUrl : "";
+}
+
+function normalizePortfolioInfo(
+  value: unknown,
+  fallback: PortfolioInfoContent,
+): PortfolioInfoContent {
+  if (!value || typeof value !== "object") return fallback;
   const candidate = value as Record<string, unknown>;
-  return [
-    "ownerName",
-    "title",
-    "subtitle",
-    "about",
-    "contactEmail",
-    "contactPhone",
-    "location",
-  ].every((key) => typeof candidate[key] === "string");
+
+  return {
+    ownerName: typeof candidate.ownerName === "string" ? candidate.ownerName : fallback.ownerName,
+    title: typeof candidate.title === "string" ? candidate.title : fallback.title,
+    subtitle: typeof candidate.subtitle === "string" ? candidate.subtitle : fallback.subtitle,
+    about: typeof candidate.about === "string" ? candidate.about : fallback.about,
+    contactEmail:
+      typeof candidate.contactEmail === "string" ? candidate.contactEmail : fallback.contactEmail,
+    contactPhone:
+      typeof candidate.contactPhone === "string" ? candidate.contactPhone : fallback.contactPhone,
+    location: typeof candidate.location === "string" ? candidate.location : fallback.location,
+    github: typeof candidate.github === "string" ? candidate.github : fallback.github,
+    linkedin: typeof candidate.linkedin === "string" ? candidate.linkedin : fallback.linkedin,
+    instagram: typeof candidate.instagram === "string" ? candidate.instagram : fallback.instagram,
+  };
 }
 
 function isTechnicalArray(value: unknown): value is TechnicalContentItem[] {
@@ -126,6 +158,8 @@ function sanitizeContentForSave(content: AdminContent): AdminContent {
     ...content,
     technical: content.technical.map((item) => ({
       ...item,
+      title: item.title.trim(),
+      description: item.description.slice(0, 2000),
       icon: normalizeTechnicalIcon(item.icon),
     })),
     projects: content.projects.map((project) => {
@@ -143,11 +177,27 @@ function sanitizeContentForSave(content: AdminContent): AdminContent {
 
       return {
         ...project,
+        tag: project.tag.trim(),
+        title: project.title.trim(),
+        description: project.description.slice(0, 3000),
         projectUrl,
         image: primaryImage,
         images,
       };
     }),
+    portfolioInfo: {
+      ...content.portfolioInfo,
+      ownerName: content.portfolioInfo.ownerName.trim(),
+      title: content.portfolioInfo.title.trim(),
+      subtitle: content.portfolioInfo.subtitle.trim(),
+      about: content.portfolioInfo.about.slice(0, 5000),
+      contactEmail: content.portfolioInfo.contactEmail.trim(),
+      contactPhone: content.portfolioInfo.contactPhone.trim(),
+      location: content.portfolioInfo.location.trim(),
+      github: normalizeOptionalHttpUrl(content.portfolioInfo.github),
+      linkedin: normalizeOptionalHttpUrl(content.portfolioInfo.linkedin),
+      instagram: normalizeOptionalHttpUrl(content.portfolioInfo.instagram),
+    },
   };
 }
 
@@ -170,6 +220,9 @@ export default function BackofficePanel() {
         contactEmail: "",
         contactPhone: "",
         location: "",
+        github: "",
+        linkedin: "",
+        instagram: "",
       },
     }),
     [tPortfolioHero, tPortfolioNav],
@@ -225,6 +278,12 @@ export default function BackofficePanel() {
     );
   });
 
+  const syncVersionConflict = async () => {
+    await loadContent();
+    setStatus(t("status.versionConflict"));
+    setUiState("error");
+  };
+
   const loadContent = async () => {
     setIsBusy(true);
     setUiState("loading");
@@ -250,13 +309,13 @@ export default function BackofficePanel() {
             normalizedProjects.length > 0
               ? normalizedProjects
               : [],
-          portfolioInfo: isPortfolioInfo(parsed.portfolioInfo)
-            ? parsed.portfolioInfo
-            : fallbackContent.portfolioInfo,
+          portfolioInfo: normalizePortfolioInfo(parsed.portfolioInfo, fallbackContent.portfolioInfo),
         };
 
         setContent(contentFromApi);
       }
+
+      setVersion(response.data?.version);
 
       try {
         const technicalResponse = await adminApi.getTechnical(apiLocale);
@@ -279,6 +338,10 @@ export default function BackofficePanel() {
       setStatus(t("status.loaded"));
       setUiState("success");
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
@@ -364,6 +427,10 @@ export default function BackofficePanel() {
       setStatus(t("status.saved"));
       setUiState("success");
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
@@ -398,6 +465,10 @@ export default function BackofficePanel() {
       setStatus(t("status.saved"));
       setUiState("success");
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
@@ -438,6 +509,10 @@ export default function BackofficePanel() {
       setStatus(t("status.uploaded"));
       setUiState("success");
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
@@ -463,10 +538,17 @@ export default function BackofficePanel() {
     setStatus(t("status.saving"));
 
     try {
+      let icon = normalizeTechnicalIcon(technicalForm.icon);
+
+      if (isSvgMarkup(technicalForm.icon)) {
+        const uploadResponse = await adminApi.upload(createSvgFile(technicalForm.icon));
+        icon = uploadResponse.data.url ?? uploadResponse.data.urls?.[0] ?? undefined;
+      }
+
       await adminApi.createTechnical(apiLocale, {
         title,
         description: technicalForm.description.trim(),
-        icon: normalizeTechnicalIcon(technicalForm.icon),
+        icon,
       });
       await adminApi.publishContent(apiLocale);
       const technicalResponse = await adminApi.getTechnical(apiLocale);
@@ -575,10 +657,15 @@ export default function BackofficePanel() {
         content: sanitized,
       });
       await adminApi.publishContent(apiLocale);
+      setContent(sanitized);
       setVersion(response.data?.version ?? version);
       setStatus(t("status.saved"));
       setUiState("success");
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
@@ -673,6 +760,9 @@ export default function BackofficePanel() {
                           emailField: t("portfolioInfo.fields.email"),
                           phoneField: t("portfolioInfo.fields.phone"),
                           locationField: t("portfolioInfo.fields.location"),
+                          githubField: t("portfolioInfo.fields.github"),
+                          linkedinField: t("portfolioInfo.fields.linkedin"),
+                          instagramField: t("portfolioInfo.fields.instagram"),
                         }}
                         onChange={(field, value) =>
                           setContent((prev) => ({
@@ -714,6 +804,9 @@ export default function BackofficePanel() {
                         <p><span className="text-[#ccc3d8]">Email:</span> {content.portfolioInfo.contactEmail || "-"}</p>
                         <p><span className="text-[#ccc3d8]">Phone:</span> {content.portfolioInfo.contactPhone || "-"}</p>
                         <p><span className="text-[#ccc3d8]">Location:</span> {content.portfolioInfo.location || "-"}</p>
+                        <p><span className="text-[#ccc3d8]">GitHub:</span> {content.portfolioInfo.github || "-"}</p>
+                        <p><span className="text-[#ccc3d8]">LinkedIn:</span> {content.portfolioInfo.linkedin || "-"}</p>
+                        <p><span className="text-[#ccc3d8]">Instagram:</span> {content.portfolioInfo.instagram || "-"}</p>
                         <p className="pt-2 text-[#ccc3d8]">{content.portfolioInfo.about || "-"}</p>
                       </div>
                     </section>

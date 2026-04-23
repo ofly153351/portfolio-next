@@ -27,7 +27,7 @@ export default function TechnicalList({
             key={item.id}
             className="admin-card-smooth glass-panel group flex items-center gap-4 rounded-2xl p-4 transition-all duration-300 hover:bg-[#2a2a2a]/40"
           >
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[#4a4455]/20 bg-[#0e0e0e]">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[#4a4455]/20 bg-[#f5f7fb] shadow-inner shadow-black/10">
               {item.icon ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img alt={item.title} className="h-8 w-8 object-contain" src={item.icon} />

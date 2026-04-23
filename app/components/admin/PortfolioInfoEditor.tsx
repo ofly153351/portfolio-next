@@ -13,6 +13,9 @@ type PortfolioInfoEditorProps = {
     emailField: string;
     phoneField: string;
     locationField: string;
+    githubField: string;
+    linkedinField: string;
+    instagramField: string;
   };
   onChange: (field: keyof PortfolioInfoContent, value: string) => void;
 };
@@ -69,6 +72,27 @@ export default function PortfolioInfoEditor({ info, labels, onChange }: Portfoli
           placeholder={labels.locationField}
           type="text"
           value={info.location}
+        />
+        <input
+          className="min-h-11 rounded-xl border border-[#4a4455]/35 bg-[#0e0e0f] px-3 text-sm text-[#e5e2e1] transition-all duration-200 focus:border-[#7c3aed]/50 md:col-span-2"
+          onChange={(event) => onChange("github", event.target.value)}
+          placeholder={labels.githubField}
+          type="url"
+          value={info.github}
+        />
+        <input
+          className="min-h-11 rounded-xl border border-[#4a4455]/35 bg-[#0e0e0f] px-3 text-sm text-[#e5e2e1] transition-all duration-200 focus:border-[#7c3aed]/50 md:col-span-2"
+          onChange={(event) => onChange("linkedin", event.target.value)}
+          placeholder={labels.linkedinField}
+          type="url"
+          value={info.linkedin}
+        />
+        <input
+          className="min-h-11 rounded-xl border border-[#4a4455]/35 bg-[#0e0e0f] px-3 text-sm text-[#e5e2e1] transition-all duration-200 focus:border-[#7c3aed]/50 md:col-span-2"
+          onChange={(event) => onChange("instagram", event.target.value)}
+          placeholder={labels.instagramField}
+          type="url"
+          value={info.instagram}
         />
       </div>
     </section>

@@ -9,7 +9,6 @@ type TechnicalEditorProps = {
     titleField: string;
     descriptionField: string;
     iconField: string;
-    uploadIcon: string;
     save: string;
     add: string;
     remove: string;
@@ -17,7 +16,6 @@ type TechnicalEditorProps = {
   onAdd: () => void;
   onChange: (id: string, field: "title" | "description" | "icon", value: string) => void;
   onSave: (id: string) => void;
-  onUploadIcon: (id: string, file: File | null) => void;
   onRemove: (id: string) => void;
 };
 
@@ -27,7 +25,6 @@ export default function TechnicalEditor({
   onAdd,
   onChange,
   onSave,
-  onUploadIcon,
   onRemove,
 }: TechnicalEditorProps) {
   return (
@@ -81,18 +78,6 @@ export default function TechnicalEditor({
               >
                 {labels.save}
               </button>
-              <label className="admin-btn-smooth inline-flex min-h-11 cursor-pointer items-center rounded-lg border border-[#4a4455]/30 px-3 py-2 text-xs font-semibold text-[#ccc3d8]">
-                {labels.uploadIcon}
-                <input
-                  accept=".svg,.png,image/svg+xml,image/png"
-                  className="hidden"
-                  onChange={(event) => {
-                    onUploadIcon(item.id, event.target.files?.[0] ?? null);
-                    event.currentTarget.value = "";
-                  }}
-                  type="file"
-                />
-              </label>
               <button
                 className="admin-btn-smooth min-h-11 rounded-lg border border-[#ff6f91]/45 px-3 py-2 text-xs font-semibold text-[#ffb4c4]"
                 onClick={() => onRemove(item.id)}

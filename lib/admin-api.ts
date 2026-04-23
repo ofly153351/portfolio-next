@@ -40,9 +40,11 @@ export type PublishContentResponse = {
 };
 
 export type ContentHistoryItem = {
+  locale: ApiLocale;
   version: number;
   updated_at: string;
   updated_by?: string;
+  content: AdminContent;
 };
 
 export type ContentHistoryResponse = {

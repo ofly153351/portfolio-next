@@ -1,7 +1,7 @@
 "use client";
 
 import { Bot, Brain, Send } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type {
   ChatMessage,
@@ -37,9 +37,8 @@ export default function AssistantCard() {
   const tokenDrainTimerRef = useRef<number | null>(null);
   const pendingDoneUsageRef = useRef<ChatUsage | undefined>(undefined);
   const messageIdRef = useRef(0);
-  const sessionIdRef = useRef(
-    `nextjs-ws-${Math.random().toString(36).slice(2, 10)}`,
-  );
+  const sessionSeed = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const sessionIdRef = useRef(`nextjs-ws-${sessionSeed}`);
 
   const nextMessageId = (prefix: "assistant" | "user"): string => {
     messageIdRef.current += 1;
