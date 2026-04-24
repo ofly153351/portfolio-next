@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, GitFork } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { PortfolioProjectItem } from "@/types/portfolio";
 import SectionHeading from "../ui/SectionHeading";
 
@@ -35,6 +36,7 @@ function normalizeProjects(items?: PortfolioProjectItem[]) {
 
 export default function ProjectsSection({ items }: ProjectsSectionProps) {
   const t = useTranslations("Portfolio.projects");
+  const locale = useLocale();
   const projects = normalizeProjects(items);
 
   if (projects.length === 0) {
@@ -54,6 +56,8 @@ export default function ProjectsSection({ items }: ProjectsSectionProps) {
           const outbound = project.projectUrl || project.repoUrl || "#";
           const isLocalAsset =
             imageSrc.startsWith("http://localhost:") || imageSrc.startsWith("https://localhost:");
+          const detailKey = project.id?.trim() || project.title;
+          const detailHref = `/${locale}/works/${encodeURIComponent(detailKey)}`;
 
           return (
             <article
@@ -62,17 +66,18 @@ export default function ProjectsSection({ items }: ProjectsSectionProps) {
               data-aos-delay={Math.min(240, index * 60)}
               key={project.id || `${project.title}-${index}`}
             >
+              <Link aria-label={project.title} className="absolute inset-0 z-10" href={detailHref} />
               <Image
                 alt={project.title}
-                className="absolute inset-0 h-full w-full object-cover opacity-40 transition-transform duration-700 group-hover:scale-105"
+                className="absolute inset-0 z-0 h-full w-full object-cover opacity-40 transition-transform duration-700 group-hover:scale-105"
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                 src={imageSrc}
                 unoptimized={isLocalAsset}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/30 to-transparent" />
+              <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#131313] via-[#131313]/30 to-transparent" />
 
-              <div className="absolute bottom-0 left-0 right-0 space-y-3 p-8">
+              <div className="absolute bottom-0 left-0 right-0 z-20 space-y-3 p-8">
                 <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase ${tone.badge}`}>
                   {project.tag || t("eyebrow")}
                 </span>
@@ -86,6 +91,7 @@ export default function ProjectsSection({ items }: ProjectsSectionProps) {
                     <a
                       className={`inline-flex items-center gap-2 text-sm font-bold transition-opacity hover:opacity-80 ${tone.link}`}
                       href={outbound}
+                      onClick={(event) => event.stopPropagation()}
                       rel="noreferrer"
                       target="_blank"
                     >
@@ -104,6 +110,7 @@ export default function ProjectsSection({ items }: ProjectsSectionProps) {
                       aria-label={`${project.title} repository`}
                       className="inline-flex items-center text-[#c5bdd8] transition-colors hover:text-white"
                       href={project.repoUrl}
+                      onClick={(event) => event.stopPropagation()}
                       rel="noreferrer"
                       target="_blank"
                     >
