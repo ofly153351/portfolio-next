@@ -1,27 +1,45 @@
 import { PlusSquare } from "lucide-react";
 import type { TechnicalFormState } from "@/types/admin";
 
+function normalizeSvgMarkup(markup: string): string {
+  let normalized = markup.trim();
+  if (!normalized.startsWith("<svg")) return normalized;
+
+  normalized = normalized.replace(/\bxlink:href=/g, "href=");
+  normalized = normalized.replace(/\s+xmlns:xlink="[^"]*"/g, "");
+
+  if (!normalized.includes('xmlns="http://www.w3.org/2000/svg"')) {
+    normalized = normalized.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+
+  return normalized;
+}
+
 function resolvePreviewSrc(icon: string): string {
   const value = icon.trim();
   if (!value) return "";
   if (value.startsWith("<svg")) {
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(value)}`;
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(normalizeSvgMarkup(value))}`;
   }
   return value;
 }
 
 type TechnicalFormCardProps = {
   isBusy: boolean;
+  isEditing: boolean;
   form: TechnicalFormState;
   onChange: (next: TechnicalFormState) => void;
+  onCancelEdit: () => void;
   onUploadIcon: (file: File | null) => void;
   onSubmit: () => void;
 };
 
 export default function TechnicalFormCard({
   isBusy,
+  isEditing,
   form,
   onChange,
+  onCancelEdit,
   onUploadIcon,
   onSubmit,
 }: TechnicalFormCardProps) {
@@ -34,7 +52,9 @@ export default function TechnicalFormCard({
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7c3aed]/20 text-[#d2bbff]">
           <PlusSquare size={18} />
         </div>
-        <h2 className="text-xl font-bold text-[#e5e2e1]">New Technical Item</h2>
+        <h2 className="text-xl font-bold text-[#e5e2e1]">
+          {isEditing ? "Edit Technical Item" : "New Technical Item"}
+        </h2>
       </div>
 
       <div className="space-y-6">
@@ -99,14 +119,26 @@ export default function TechnicalFormCard({
           />
         </label>
 
-        <button
-          className="admin-btn-smooth w-full rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#0566d9] py-4 text-xs font-bold tracking-widest text-[#e5e2e1] shadow-xl shadow-[#7c3aed]/20 disabled:opacity-60"
-          disabled={isBusy}
-          onClick={onSubmit}
-          type="button"
-        >
-          ADD TO TECHNICAL STACK
-        </button>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            className="admin-btn-smooth rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#0566d9] py-4 text-xs font-bold tracking-widest text-[#e5e2e1] shadow-xl shadow-[#7c3aed]/20 disabled:opacity-60"
+            disabled={isBusy}
+            onClick={onSubmit}
+            type="button"
+          >
+            {isEditing ? "UPDATE TECHNICAL ITEM" : "ADD TO TECHNICAL STACK"}
+          </button>
+          {isEditing ? (
+            <button
+              className="admin-btn-smooth rounded-xl border border-[#4a4455]/30 py-4 text-xs font-bold tracking-widest text-[#ccc3d8] hover:bg-[#2a2a2a]"
+              disabled={isBusy}
+              onClick={onCancelEdit}
+              type="button"
+            >
+              CANCEL EDIT
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );

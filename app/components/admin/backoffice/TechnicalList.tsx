@@ -1,13 +1,15 @@
-import { Layers3, Trash2 } from "lucide-react";
+import { Layers3, Pencil, Trash2 } from "lucide-react";
 import type { TechnicalContentItem } from "@/types/admin";
 
 type TechnicalListProps = {
   items: TechnicalContentItem[];
+  onEdit: (item: TechnicalContentItem) => void;
   onDelete: (id: string) => void;
 };
 
 export default function TechnicalList({
   items,
+  onEdit,
   onDelete,
 }: TechnicalListProps) {
   return (
@@ -39,13 +41,22 @@ export default function TechnicalList({
               <h3 className="truncate font-bold text-[#e5e2e1]">{item.title}</h3>
               <p className="line-clamp-1 text-xs text-[#ccc3d8]">{item.description || "-"}</p>
             </div>
-            <button
-              className="admin-btn-smooth flex h-10 w-10 items-center justify-center rounded-full border border-[#4a4455]/20 text-[#ccc3d8] hover:bg-[#93000a] hover:text-white"
-              onClick={() => onDelete(item.id)}
-              type="button"
-            >
-              <Trash2 size={16} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                className="admin-btn-smooth flex h-10 w-10 items-center justify-center rounded-full border border-[#4a4455]/20 text-[#ccc3d8] hover:bg-[#7c3aed] hover:text-white"
+                onClick={() => onEdit(item)}
+                type="button"
+              >
+                <Pencil size={16} />
+              </button>
+              <button
+                className="admin-btn-smooth flex h-10 w-10 items-center justify-center rounded-full border border-[#4a4455]/20 text-[#ccc3d8] hover:bg-[#93000a] hover:text-white"
+                onClick={() => onDelete(item.id)}
+                type="button"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         ))}
       </div>

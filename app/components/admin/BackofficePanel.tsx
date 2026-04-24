@@ -58,11 +58,22 @@ function isSvgMarkup(value?: string): boolean {
   return value.trim().startsWith("<svg");
 }
 
+function normalizeSvgMarkup(markup: string): string {
+  let normalized = markup.trim();
+  if (!normalized.startsWith("<svg")) return normalized;
+
+  normalized = normalized.replace(/\bxlink:href=/g, "href=");
+  normalized = normalized.replace(/\s+xmlns:xlink="[^"]*"/g, "");
+
+  if (!normalized.includes('xmlns="http://www.w3.org/2000/svg"')) {
+    normalized = normalized.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+
+  return normalized;
+}
+
 function createSvgFile(markup: string): File {
-  const normalized = markup.trim();
-  const svgWithNamespace = normalized.includes("xmlns=")
-    ? normalized
-    : normalized.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+  const svgWithNamespace = normalizeSvgMarkup(markup);
 
   return new File([svgWithNamespace], `technical-icon-${Date.now()}.svg`, {
     type: "image/svg+xml",
@@ -249,6 +260,7 @@ export default function BackofficePanel() {
     description: "",
     icon: "",
   });
+  const [editingTechnicalId, setEditingTechnicalId] = useState<string | null>(null);
 
   const apiLocale = normalizeLocale(locale);
 
@@ -282,6 +294,22 @@ export default function BackofficePanel() {
     await loadContent();
     setStatus(t("status.versionConflict"));
     setUiState("error");
+  };
+
+  const resetTechnicalForm = () => {
+    setEditingTechnicalId(null);
+    setTechnicalForm({ title: "", description: "", icon: "" });
+  };
+
+  const beginEditTechnical = (item: TechnicalContentItem) => {
+    setEditingTechnicalId(item.id);
+    setTechnicalForm({
+      title: item.title,
+      description: item.description,
+      icon: item.icon ?? "",
+    });
+    setUiState("idle");
+    setStatus(t("status.idle"));
   };
 
   const loadContent = async () => {
@@ -525,7 +553,7 @@ export default function BackofficePanel() {
     }
   };
 
-  const createTechnical = async () => {
+  const saveTechnical = async () => {
     const title = technicalForm.title.trim();
     if (!title) {
       setUiState("error");
@@ -545,11 +573,19 @@ export default function BackofficePanel() {
         icon = uploadResponse.data.url ?? uploadResponse.data.urls?.[0] ?? undefined;
       }
 
-      await adminApi.createTechnical(apiLocale, {
-        title,
-        description: technicalForm.description.trim(),
-        icon,
-      });
+      if (editingTechnicalId) {
+        await adminApi.updateTechnical(apiLocale, editingTechnicalId, {
+          title,
+          description: technicalForm.description.trim(),
+          icon,
+        });
+      } else {
+        await adminApi.createTechnical(apiLocale, {
+          title,
+          description: technicalForm.description.trim(),
+          icon,
+        });
+      }
       await adminApi.publishContent(apiLocale);
       const technicalResponse = await adminApi.getTechnical(apiLocale);
       setContent((prev) => ({
@@ -562,10 +598,14 @@ export default function BackofficePanel() {
         })),
       }));
       setVersion(technicalResponse.data.version ?? version);
-      setTechnicalForm({ title: "", description: "", icon: "" });
+      resetTechnicalForm();
       setStatus(t("status.saved"));
       setUiState("success");
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
@@ -622,9 +662,16 @@ export default function BackofficePanel() {
         ...prev,
         technical: prev.technical.filter((item) => item.id !== id),
       }));
+      if (editingTechnicalId === id) {
+        resetTechnicalForm();
+      }
       setStatus(t("status.saved"));
       setUiState("success");
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         adminApi.clearToken();
         router.replace(`/${locale}/admin/login`);
@@ -729,9 +776,11 @@ export default function BackofficePanel() {
                   {showTechnicalForm ? (
                     <TechnicalFormCard
                       form={technicalForm}
+                      isEditing={editingTechnicalId !== null}
                       isBusy={isBusy}
                       onChange={setTechnicalForm}
-                      onSubmit={createTechnical}
+                      onCancelEdit={resetTechnicalForm}
+                      onSubmit={saveTechnical}
                       onUploadIcon={uploadTechnicalIcon}
                     />
                   ) : null}
@@ -790,6 +839,7 @@ export default function BackofficePanel() {
                   {showTechnicalForm ? (
                     <TechnicalList
                       items={filteredTechnical}
+                      onEdit={beginEditTechnical}
                       onDelete={deleteTechnical}
                     />
                   ) : null}
