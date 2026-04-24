@@ -48,10 +48,26 @@ export default function ProjectFormCard({
             <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a4455]" size={14} />
             <input
               className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] py-3 pl-10 pr-4 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
-              onChange={(event) => onChange({ ...form, url: event.target.value })}
+              onChange={(event) => onChange({ ...form, projectUrl: event.target.value })}
               placeholder="https://project-url.com"
               type="url"
-              value={form.url}
+              value={form.projectUrl}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#ccc3d8]">
+            Repo URL
+          </label>
+          <div className="relative">
+            <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a4455]" size={14} />
+            <input
+              className="w-full rounded-xl border border-[#4a4455]/15 bg-[#0e0e0e] py-3 pl-10 pr-4 text-[#e5e2e1] placeholder:text-[#4a4455] transition-all focus:border-transparent focus:ring-2 focus:ring-[#7c3aed]"
+              onChange={(event) => onChange({ ...form, repoUrl: event.target.value })}
+              placeholder="https://github.com/username/repository"
+              type="url"
+              value={form.repoUrl}
             />
           </div>
         </div>

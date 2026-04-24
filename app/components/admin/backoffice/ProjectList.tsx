@@ -83,7 +83,8 @@ export default function ProjectList({
                 onClick={() =>
                   onEdit({
                     title: project.title,
-                    url: project.projectUrl ?? "",
+                    projectUrl: project.projectUrl ?? "",
+                    repoUrl: project.repoUrl ?? "",
                     description: project.description,
                     tag: project.tag,
                     images: project.images,

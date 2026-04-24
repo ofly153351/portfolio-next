@@ -87,6 +87,13 @@ function normalizeProjectUrl(url?: string): string | undefined {
   return isHttpUrl(nextUrl) ? nextUrl : undefined;
 }
 
+function normalizeRepoUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  const nextUrl = url.trim();
+  if (!nextUrl) return undefined;
+  return isHttpUrl(nextUrl) ? nextUrl : undefined;
+}
+
 function normalizeOptionalHttpUrl(url?: string): string {
   if (!url) return "";
   const nextUrl = url.trim();
@@ -153,6 +160,8 @@ function normalizeProjectItem(raw: unknown): ProjectContentItem | null {
     tag: item.tag,
     title: item.title,
     description: item.description,
+    repoUrl:
+      typeof item.repoUrl === "string" ? normalizeRepoUrl(item.repoUrl) : undefined,
     projectUrl:
       typeof item.projectUrl === "string"
         ? normalizeProjectUrl(item.projectUrl)
@@ -177,6 +186,7 @@ function sanitizeContentForSave(content: AdminContent): AdminContent {
       const normalizedImages = project.images
         .map((image) => image.trim())
         .filter((image) => image && isHttpUrl(image));
+      const repoUrl = normalizeRepoUrl(project.repoUrl);
       const projectUrl = normalizeProjectUrl(project.projectUrl);
 
       const fallbackImage =
@@ -191,6 +201,7 @@ function sanitizeContentForSave(content: AdminContent): AdminContent {
         tag: project.tag.trim(),
         title: project.title.trim(),
         description: project.description.slice(0, 3000),
+        repoUrl,
         projectUrl,
         image: primaryImage,
         images,
@@ -264,7 +275,8 @@ export default function BackofficePanel() {
 
   const [projectForm, setProjectForm] = useState<ProjectFormState>({
     title: "",
-    url: "",
+    projectUrl: "",
+    repoUrl: "",
     description: "",
     tag: "AI",
     images: [],
@@ -292,7 +304,8 @@ export default function BackofficePanel() {
     return (
       project.title.toLowerCase().includes(keyword) ||
       project.description.toLowerCase().includes(keyword) ||
-      project.tag.toLowerCase().includes(keyword)
+      project.tag.toLowerCase().includes(keyword) ||
+      (project.repoUrl ?? "").toLowerCase().includes(keyword)
     );
   });
 
@@ -428,15 +441,18 @@ export default function BackofficePanel() {
       return;
     }
 
-    const url = projectForm.url.trim();
-    const normalizedUrl = url && isHttpUrl(url) ? url : "";
+    const projectUrl = projectForm.projectUrl.trim();
+    const repoUrl = projectForm.repoUrl.trim();
+    const normalizedProjectUrl = projectUrl && isHttpUrl(projectUrl) ? projectUrl : "";
+    const normalizedRepoUrl = repoUrl && isHttpUrl(repoUrl) ? repoUrl : "";
 
     const payloadProject: ProjectContentItem = {
       id: makeId("project"),
       tag: projectForm.tag.trim() || "GENERAL",
       title,
       description: projectForm.description.trim(),
-      projectUrl: normalizedUrl || undefined,
+      repoUrl: normalizedRepoUrl || undefined,
+      projectUrl: normalizedProjectUrl || undefined,
       image: projectForm.images.find((image) => isHttpUrl(image)),
       images: Array.from(new Set(projectForm.images.filter((image) => isHttpUrl(image)))),
     };
@@ -462,7 +478,8 @@ export default function BackofficePanel() {
       setVersion(response.data?.version ?? version);
       setProjectForm({
         title: "",
-        url: "",
+        projectUrl: "",
+        repoUrl: "",
         description: "",
         tag: "AI",
         images: [],

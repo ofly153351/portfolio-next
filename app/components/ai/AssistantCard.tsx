@@ -10,6 +10,7 @@ import type {
   ChatWsEvent,
   QuickAction,
 } from "@/types/ai";
+import { adminApi } from "@/lib/admin-api";
 
 export default function AssistantCard() {
   const t = useTranslations("Portfolio.ai");
@@ -126,7 +127,7 @@ export default function AssistantCard() {
     tokenDrainTimerRef.current = window.setTimeout(tick, 0);
   };
 
-  const connectSocket = () => {
+  const connectSocket = async (): Promise<WebSocket> => {
     const existing = wsRef.current;
     if (
       existing &&
@@ -136,7 +137,8 @@ export default function AssistantCard() {
       return existing;
     }
 
-    const ws = new WebSocket("ws://localhost:8080/api/chat/ws");
+    const wsURL = await adminApi.getPublicWsURL();
+    const ws = new WebSocket(wsURL);
     wsRef.current = ws;
     setStatusLabel(t("status.connecting"));
 
@@ -274,13 +276,20 @@ export default function AssistantCard() {
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    const ws = connectSocket();
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(payload));
-      return;
-    }
-
     pendingPayloadRef.current = payload;
+    void (async () => {
+      try {
+        const ws = await connectSocket();
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(payload));
+          pendingPayloadRef.current = null;
+        }
+      } catch {
+        setIsStreaming(false);
+        setStatusLabel(t("status.error"));
+        appendToken(`\n${t("serverError")}: ${t("unknownError")}`);
+      }
+    })();
   };
 
   const isBusy = isStreaming;

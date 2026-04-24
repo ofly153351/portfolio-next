@@ -16,6 +16,13 @@ export type PublicContentResponse = {
   content: AdminContent;
 };
 
+export type PublicTokenResponse = {
+  token: string;
+  token_type?: string;
+  expires_at?: string;
+  expires_in?: number;
+};
+
 export type SaveContentPayload = {
   version?: number;
   content: AdminContent & {
@@ -98,6 +105,8 @@ type AdminLoginResponse = {
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 const ADMIN_TOKEN_STORAGE_KEY = "portfolio_admin_access_token";
+let cachedPublicToken = "";
+let cachedPublicTokenExpiresAt = 0;
 
 function readStoredToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -126,6 +135,33 @@ export const api = axios.create({
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
+
+function toWsBaseURL(httpBaseURL: string): string {
+  if (httpBaseURL.startsWith("https://")) {
+    return `wss://${httpBaseURL.slice("https://".length)}`;
+  }
+  if (httpBaseURL.startsWith("http://")) {
+    return `ws://${httpBaseURL.slice("http://".length)}`;
+  }
+  return httpBaseURL;
+}
+
+async function getPublicToken(): Promise<string> {
+  const now = Date.now();
+  if (cachedPublicToken && cachedPublicTokenExpiresAt-now > 15_000) {
+    return cachedPublicToken;
+  }
+
+  const response = await api.get<PublicTokenResponse>("/api/public/token");
+  const token = response.data?.token?.trim();
+  if (!token) {
+    throw new Error("public token is missing in response");
+  }
+  const expiresIn = Number(response.data?.expires_in ?? 300);
+  cachedPublicToken = token;
+  cachedPublicTokenExpiresAt = now + Math.max(30, expiresIn) * 1000;
+  return cachedPublicToken;
+}
 
 api.interceptors.request.use((config) => {
   const url = config.url ?? "";
@@ -190,8 +226,19 @@ export const adminApi = {
     });
   },
 
-  getPublicContent: (locale: ApiLocale) =>
-    api.get<PublicContentResponse>("/api/content", { params: { locale } }),
+  getPublicContent: async (locale: ApiLocale) => {
+    const token = await getPublicToken();
+    return api.get<PublicContentResponse>("/api/content", {
+      params: { locale },
+      headers: { "X-Public-Token": token },
+    });
+  },
+
+  getPublicWsURL: async () => {
+    const token = await getPublicToken();
+    const wsBase = toWsBaseURL(baseURL);
+    return `${wsBase}/api/chat/ws?public_token=${encodeURIComponent(token)}`;
+  },
 
   getTechnical: (locale: ApiLocale) =>
     api.get<TechnicalListResponse>("/api/admin/technical", { params: { locale } }),

@@ -12,6 +12,7 @@ export type ProjectContentItem = {
   tag: string;
   title: string;
   description: string;
+  repoUrl?: string;
   projectUrl?: string;
   image?: string;
   images: string[];
@@ -40,7 +41,8 @@ export type AdminUiState = "idle" | "loading" | "success" | "error";
 
 export type ProjectFormState = {
   title: string;
-  url: string;
+  projectUrl: string;
+  repoUrl: string;
   description: string;
   tag: string;
   images: string[];
