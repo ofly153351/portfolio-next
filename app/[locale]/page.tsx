@@ -3,7 +3,6 @@ import SiteFooter from "../components/layout/SiteFooter";
 import SiteNavbar from "../components/layout/SiteNavbar";
 import ArchitectureSection from "../components/sections/ArchitectureSection";
 import LandingIntroClient from "../components/sections/LandingIntroClient";
-import ProjectsSection from "../components/sections/ProjectsSection";
 import AOSProvider from "../components/ui/AOSProvider";
 
 type HomePageProps = {
@@ -26,7 +25,6 @@ export default async function HomePage({ params }: HomePageProps) {
         <SiteNavbar />
         <main className="relative mx-auto max-w-7xl overflow-hidden px-4 pt-32 md:px-8">
           <LandingIntroClient locale={locale} />
-          <ProjectsSection />
           <ArchitectureSection />
           <SiteFooter />
         </main>

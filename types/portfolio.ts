@@ -10,15 +10,16 @@ export type HeroContent = {
   about: string;
 };
 
-export type ProjectTone = "primary" | "secondary" | "tertiary";
-
-export type ProjectItem = {
+export type PortfolioProjectItem = {
+  id?: string;
+  index?: number;
   tag: string;
   title: string;
   description: string;
-  image: string;
-  alt: string;
-  tone: ProjectTone;
+  repoUrl?: string;
+  projectUrl?: string;
+  image?: string;
+  images?: string[];
 };
 
 export type ArchitectureList = {

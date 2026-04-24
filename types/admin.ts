@@ -2,6 +2,7 @@ export type AdminMenuKey = "dashboard" | "technical" | "projects" | "portfolioIn
 
 export type TechnicalContentItem = {
   id: string;
+  index?: number;
   title: string;
   description: string;
   icon?: string;
@@ -9,6 +10,7 @@ export type TechnicalContentItem = {
 
 export type ProjectContentItem = {
   id: string;
+  index?: number;
   tag: string;
   title: string;
   description: string;
