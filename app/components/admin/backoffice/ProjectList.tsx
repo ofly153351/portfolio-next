@@ -1,17 +1,22 @@
-import { Pencil, Trash2, UploadCloud } from "lucide-react";
+import { GripVertical, Pencil, Trash2, UploadCloud } from "lucide-react";
+import { useState } from "react";
 import type { ProjectContentItem, ProjectFormState } from "@/types/admin";
 
 type ProjectListProps = {
   items: ProjectContentItem[];
   onEdit: (form: ProjectFormState) => void;
   onDelete: (id: string) => void;
+  onReorder: (fromId: string, toId: string) => void;
 };
 
 export default function ProjectList({
   items,
   onEdit,
   onDelete,
+  onReorder,
 }: ProjectListProps) {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
   return (
     <>
       <div className="flex items-center justify-between px-2">
@@ -22,12 +27,28 @@ export default function ProjectList({
           </span>
         </div>
       </div>
-      <div className="space-y-4">
+      <div className="admin-scrollbar max-h-[65vh] space-y-4 overflow-y-auto pr-2">
         {items.map((project) => (
           <div
             key={project.id}
-            className="admin-card-smooth glass-panel group flex items-center gap-6 rounded-2xl p-5 transition-all duration-300 hover:bg-[#2a2a2a]/40"
+            className={`admin-card-smooth glass-panel group flex items-center gap-6 rounded-2xl p-5 transition-all duration-300 hover:bg-[#2a2a2a]/40 ${
+              draggingId === project.id ? "opacity-60 ring-1 ring-[#7c3aed]/40" : ""
+            }`}
+            draggable
+            onDragEnd={() => setDraggingId(null)}
+            onDragOver={(event) => {
+              event.preventDefault();
+            }}
+            onDragStart={() => setDraggingId(project.id)}
+            onDrop={() => {
+              if (!draggingId || draggingId === project.id) return;
+              onReorder(draggingId, project.id);
+              setDraggingId(null);
+            }}
           >
+            <div className="flex h-10 w-8 shrink-0 items-center justify-center text-[#6b6478]">
+              <GripVertical size={16} />
+            </div>
             <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-[#4a4455]/20 bg-[#0e0e0e]">
               {project.images[0] ? (
                 // eslint-disable-next-line @next/next/no-img-element

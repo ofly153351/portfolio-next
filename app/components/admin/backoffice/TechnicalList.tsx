@@ -1,17 +1,22 @@
-import { Layers3, Pencil, Trash2 } from "lucide-react";
+import { GripVertical, Layers3, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 import type { TechnicalContentItem } from "@/types/admin";
 
 type TechnicalListProps = {
   items: TechnicalContentItem[];
   onEdit: (item: TechnicalContentItem) => void;
   onDelete: (id: string) => void;
+  onReorder: (fromId: string, toId: string) => void;
 };
 
 export default function TechnicalList({
   items,
   onEdit,
   onDelete,
+  onReorder,
 }: TechnicalListProps) {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
   return (
     <>
       <div className="flex items-center justify-between px-2">
@@ -23,12 +28,28 @@ export default function TechnicalList({
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="admin-scrollbar max-h-[65vh] space-y-4 overflow-y-auto pr-2">
         {items.map((item) => (
           <div
             key={item.id}
-            className="admin-card-smooth glass-panel group flex items-center gap-4 rounded-2xl p-4 transition-all duration-300 hover:bg-[#2a2a2a]/40"
+            className={`admin-card-smooth glass-panel group flex items-center gap-4 rounded-2xl p-4 transition-all duration-300 hover:bg-[#2a2a2a]/40 ${
+              draggingId === item.id ? "opacity-60 ring-1 ring-[#7c3aed]/40" : ""
+            }`}
+            draggable
+            onDragEnd={() => setDraggingId(null)}
+            onDragOver={(event) => {
+              event.preventDefault();
+            }}
+            onDragStart={() => setDraggingId(item.id)}
+            onDrop={() => {
+              if (!draggingId || draggingId === item.id) return;
+              onReorder(draggingId, item.id);
+              setDraggingId(null);
+            }}
           >
+            <div className="flex h-10 w-8 shrink-0 items-center justify-center text-[#6b6478]">
+              <GripVertical size={16} />
+            </div>
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[#4a4455]/20 bg-[#f5f7fb] shadow-inner shadow-black/10">
               {item.icon ? (
                 // eslint-disable-next-line @next/next/no-img-element

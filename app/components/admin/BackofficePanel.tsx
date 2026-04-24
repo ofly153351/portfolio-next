@@ -212,6 +212,21 @@ function sanitizeContentForSave(content: AdminContent): AdminContent {
   };
 }
 
+function moveItemByID<T extends { id: string }>(
+  items: T[],
+  fromId: string,
+  toId: string,
+): T[] {
+  const fromIndex = items.findIndex((item) => item.id === fromId);
+  const toIndex = items.findIndex((item) => item.id === toId);
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return items;
+
+  const next = [...items];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
 export default function BackofficePanel() {
   const locale = useLocale();
   const router = useRouter();
@@ -509,6 +524,48 @@ export default function BackofficePanel() {
     }
   };
 
+  const reorderProjects = async (fromId: string, toId: string) => {
+    const nextProjects = moveItemByID(content.projects, fromId, toId);
+    if (nextProjects === content.projects) return;
+
+    const nextContent: AdminContent = {
+      ...content,
+      projects: nextProjects,
+    };
+    setContent(nextContent);
+    setIsBusy(true);
+    setUiState("loading");
+    setStatus(t("status.saving"));
+
+    try {
+      const sanitized = sanitizeContentForSave(nextContent);
+      const response = await adminApi.saveContent(apiLocale, {
+        version,
+        content: sanitized,
+      });
+      await adminApi.publishContent(apiLocale);
+      setContent(sanitized);
+      setVersion(response.data?.version ?? version);
+      setStatus(t("status.saved"));
+      setUiState("success");
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        adminApi.clearToken();
+        router.replace(`/${locale}/admin/login`);
+        return;
+      }
+      await loadContent();
+      setStatus(t("status.saveFailed"));
+      setUiState("error");
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
   const uploadProjectFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
@@ -684,6 +741,48 @@ export default function BackofficePanel() {
     }
   };
 
+  const reorderTechnical = async (fromId: string, toId: string) => {
+    const nextTechnical = moveItemByID(content.technical, fromId, toId);
+    if (nextTechnical === content.technical) return;
+
+    const nextContent: AdminContent = {
+      ...content,
+      technical: nextTechnical,
+    };
+    setContent(nextContent);
+    setIsBusy(true);
+    setUiState("loading");
+    setStatus(t("status.saving"));
+
+    try {
+      const sanitized = sanitizeContentForSave(nextContent);
+      const response = await adminApi.saveContent(apiLocale, {
+        version,
+        content: sanitized,
+      });
+      await adminApi.publishContent(apiLocale);
+      setContent(sanitized);
+      setVersion(response.data?.version ?? version);
+      setStatus(t("status.saved"));
+      setUiState("success");
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        await syncVersionConflict();
+        return;
+      }
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        adminApi.clearToken();
+        router.replace(`/${locale}/admin/login`);
+        return;
+      }
+      await loadContent();
+      setStatus(t("status.saveFailed"));
+      setUiState("error");
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await adminApi.logout();
@@ -833,6 +932,7 @@ export default function BackofficePanel() {
                       items={filteredProjects}
                       onDelete={deleteProject}
                       onEdit={setProjectForm}
+                      onReorder={reorderProjects}
                     />
                   ) : null}
 
@@ -841,6 +941,7 @@ export default function BackofficePanel() {
                       items={filteredTechnical}
                       onEdit={beginEditTechnical}
                       onDelete={deleteTechnical}
+                      onReorder={reorderTechnical}
                     />
                   ) : null}
 

@@ -90,23 +90,26 @@ export default function SkillsSection({
               <article
                 key={item.title || String(index)}
                 data-aos="fade-up"
-                className="group relative flex min-h-[180px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#4a4455]/20 bg-[radial-gradient(circle_at_30%_0%,#25242c_0%,#1a191e_48%,#151418_100%)] p-5 text-center shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-700 ease-out hover:-translate-y-1.5 hover:border-[#7c3aed]/35"
+                className="group relative flex min-h-[180px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#4a4455]/20 bg-[radial-gradient(circle_at_30%_0%,#25242c_0%,#1a191e_48%,#151418_100%)] p-5 text-center shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-500 ease-out  hover:border-[#7c3aed]/35"
               >
                 <div
-                  className={`pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full bg-gradient-to-br blur-3xl transition-transform duration-700 ease-out group-hover:scale-110 ${glow}`}
+                  className={`pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full bg-gradient-to-br blur-3xl transition-transform duration-500 ease-out group-hover:scale-110 ${glow}`}
                 />
                 <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                <div className="relative z-10 mb-4 flex h-24 w-24 items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-b from-[#f8f9ff] to-[#e8ecff] shadow-[0_18px_42px_rgba(0,0,0,0.26)] transition-transform duration-700 ease-out group-hover:scale-105">
+                <div className="relative z-10 mb-4 flex h-24 w-24 items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-b from-[#f8f9ff] to-[#e8ecff] shadow-[0_18px_42px_rgba(0,0,0,0.26)] transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-110 group-hover:shadow-[0_22px_50px_rgba(91,69,255,0.35)]">
                   <div className="absolute inset-1 rounded-xl border border-[#7c3aed]/15" />
                   {item.icon ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       alt={`${item.title} icon`}
-                      className="relative z-10 h-14 w-14 object-contain"
+                      className="relative z-10 h-14 w-14 object-contain transition-all duration-500 ease-out group-hover:-translate-y-0.5 group-hover:scale-125 group-hover:drop-shadow-[0_10px_18px_rgba(91,69,255,0.35)]"
                       src={item.icon}
                     />
                   ) : (
-                    <Icon className="relative z-10 text-[#5b45ff]" size={40} />
+                    <Icon
+                      className="relative z-10 text-[#5b45ff] transition-all duration-500 ease-out group-hover:-translate-y-0.5 group-hover:scale-125"
+                      size={40}
+                    />
                   )}
                 </div>
                 <h4 className="relative z-10 text-base font-semibold tracking-tight text-[#f5f3ff]">
