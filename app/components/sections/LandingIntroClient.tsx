@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { adminApi } from "@/lib/admin-api";
+import { resolveAssetUrl, resolveAssetUrls } from "@/lib/asset-url";
 import type { ProjectContentItem } from "@/types/admin";
 import type { HeroContent, PortfolioProjectItem, SkillItem } from "@/types/portfolio";
 import HeroSection from "./HeroSection";
@@ -26,8 +27,8 @@ function mapProjects(items?: ProjectContentItem[]): PortfolioProjectItem[] | und
       description: item.description ?? "",
       repoUrl: item.repoUrl ?? "",
       projectUrl: item.projectUrl ?? "",
-      image: item.image ?? "",
-      images: item.images ?? [],
+      image: resolveAssetUrl(item.image) ?? "",
+      images: resolveAssetUrls(item.images ?? []),
     }));
 
   return mapped.length > 0 ? mapped : undefined;
@@ -57,7 +58,7 @@ export default function LandingIntroClient({ locale }: LandingIntroClientProps) 
         const mappedSkills = (content.technical ?? []).map((item) => ({
           title: item.title,
           description: item.description,
-          icon: item.icon,
+          icon: resolveAssetUrl(item.icon),
         }));
         setSkillItems(mappedSkills.length > 0 ? mappedSkills : undefined);
         setProjectItems(mapProjects(content.projects));

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, GitFork } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { isHttpUrl } from "@/lib/asset-url";
 import type { PortfolioProjectItem } from "@/types/portfolio";
 import SectionHeading from "../ui/SectionHeading";
 
@@ -54,8 +55,6 @@ export default function ProjectsSection({ items }: ProjectsSectionProps) {
           const tone = toneClasses[index % toneClasses.length];
           const imageSrc = project.image || project.images?.[0] || "/projects/project-fallback.svg";
           const outbound = project.projectUrl || project.repoUrl || "#";
-          const isLocalAsset =
-            imageSrc.startsWith("http://localhost:") || imageSrc.startsWith("https://localhost:");
           const detailKey = project.id?.trim() || project.title;
           const detailHref = `/${locale}/works/${encodeURIComponent(detailKey)}`;
 
@@ -73,7 +72,7 @@ export default function ProjectsSection({ items }: ProjectsSectionProps) {
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                 src={imageSrc}
-                unoptimized={isLocalAsset}
+                unoptimized={isHttpUrl(imageSrc)}
               />
               <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#131313] via-[#131313]/30 to-transparent" />
 

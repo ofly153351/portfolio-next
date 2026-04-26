@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { adminApi, type ApiLocale } from "@/lib/admin-api";
+import { isHttpUrl, resolveAssetUrl, resolveAssetUrls } from "@/lib/asset-url";
 import type {
   AdminContent,
   AdminMenuKey,
@@ -37,20 +38,11 @@ function normalizeLocale(locale: string): ApiLocale {
   return locale.startsWith("th") ? "th" : "en";
 }
 
-function isHttpUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 function normalizeTechnicalIcon(icon?: string): string | undefined {
   if (!icon) return undefined;
   const nextIcon = icon.trim();
   if (!nextIcon) return undefined;
-  return isHttpUrl(nextIcon) ? nextIcon : undefined;
+  return isHttpUrl(nextIcon) ? resolveAssetUrl(nextIcon) : undefined;
 }
 
 function isSvgMarkup(value?: string): boolean {
@@ -145,6 +137,7 @@ function normalizeProjectItem(raw: unknown): ProjectContentItem | null {
     : [];
   const singleImage = typeof item.image === "string" && item.image ? [item.image] : [];
   const images = imagesFromArray.length > 0 ? imagesFromArray : singleImage;
+  const normalizedImages = resolveAssetUrls(images);
 
   if (
     typeof item.id !== "string" ||
@@ -168,8 +161,10 @@ function normalizeProjectItem(raw: unknown): ProjectContentItem | null {
         : typeof item.url === "string"
           ? normalizeProjectUrl(item.url)
           : undefined,
-    image: typeof item.image === "string" ? item.image : images[0],
-    images,
+    image:
+      (typeof item.image === "string" ? resolveAssetUrl(item.image) : undefined) ??
+      normalizedImages[0],
+    images: normalizedImages,
   };
 }
 
@@ -183,14 +178,16 @@ function sanitizeContentForSave(content: AdminContent): AdminContent {
       icon: normalizeTechnicalIcon(item.icon),
     })),
     projects: content.projects.map((project) => {
-      const normalizedImages = project.images
+      const normalizedImages = resolveAssetUrls(
+        project.images
         .map((image) => image.trim())
-        .filter((image) => image && isHttpUrl(image));
+        .filter((image) => image && isHttpUrl(image)),
+      );
       const repoUrl = normalizeRepoUrl(project.repoUrl);
       const projectUrl = normalizeProjectUrl(project.projectUrl);
 
       const fallbackImage =
-        project.image && isHttpUrl(project.image) ? project.image : undefined;
+        project.image && isHttpUrl(project.image) ? resolveAssetUrl(project.image) : undefined;
       const primaryImage = normalizedImages[0] ?? fallbackImage;
       const images = primaryImage
         ? Array.from(new Set([primaryImage, ...normalizedImages]))
@@ -359,7 +356,10 @@ export default function BackofficePanel() {
 
         const contentFromApi: AdminContent = {
           technical: isTechnicalArray(parsed.technical)
-            ? parsed.technical
+            ? parsed.technical.map((item) => ({
+                ...item,
+                icon: resolveAssetUrl(item.icon),
+              }))
             : [],
           projects:
             normalizedProjects.length > 0
@@ -382,7 +382,7 @@ export default function BackofficePanel() {
               id: item.id,
               title: item.title,
               description: item.description,
-              icon: item.icon,
+              icon: resolveAssetUrl(item.icon),
             })),
           }));
           setVersion(technicalResponse.data?.version ?? response.data?.version);
@@ -453,8 +453,8 @@ export default function BackofficePanel() {
       description: projectForm.description.trim(),
       repoUrl: normalizedRepoUrl || undefined,
       projectUrl: normalizedProjectUrl || undefined,
-      image: projectForm.images.find((image) => isHttpUrl(image)),
-      images: Array.from(new Set(projectForm.images.filter((image) => isHttpUrl(image)))),
+      image: resolveAssetUrl(projectForm.images.find((image) => isHttpUrl(image))),
+      images: Array.from(new Set(resolveAssetUrls(projectForm.images.filter((image) => isHttpUrl(image))))),
     };
 
     const nextContent: AdminContent = {
@@ -597,8 +597,9 @@ export default function BackofficePanel() {
         : response.data.url
           ? [response.data.url]
           : [];
+      const resolvedUploadedUrls = resolveAssetUrls(uploadedUrls);
 
-      if (uploadedUrls.length === 0) {
+      if (resolvedUploadedUrls.length === 0) {
         setUiState("error");
         setStatus(t("status.uploadFailed"));
         return;
@@ -606,7 +607,7 @@ export default function BackofficePanel() {
 
       setProjectForm((prev) => ({
         ...prev,
-        images: [...prev.images, ...uploadedUrls],
+        images: [...prev.images, ...resolvedUploadedUrls],
       }));
       setStatus(t("status.uploaded"));
       setUiState("success");
@@ -644,7 +645,7 @@ export default function BackofficePanel() {
 
       if (isSvgMarkup(technicalForm.icon)) {
         const uploadResponse = await adminApi.upload(createSvgFile(technicalForm.icon));
-        icon = uploadResponse.data.url ?? uploadResponse.data.urls?.[0] ?? undefined;
+        icon = resolveAssetUrl(uploadResponse.data.url ?? uploadResponse.data.urls?.[0]);
       }
 
       if (editingTechnicalId) {
@@ -668,7 +669,7 @@ export default function BackofficePanel() {
           id: item.id,
           title: item.title,
           description: item.description,
-          icon: item.icon,
+          icon: resolveAssetUrl(item.icon),
         })),
       }));
       setVersion(technicalResponse.data.version ?? version);
@@ -701,7 +702,7 @@ export default function BackofficePanel() {
 
     try {
       const response = await adminApi.upload(file);
-      const iconUrl = response.data.url ?? response.data.urls?.[0] ?? "";
+      const iconUrl = resolveAssetUrl(response.data.url ?? response.data.urls?.[0]) ?? "";
       if (!iconUrl) {
         setUiState("error");
         setStatus(t("status.uploadFailed"));

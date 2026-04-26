@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, ExternalLink, GitFork } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { adminApi } from "@/lib/admin-api";
+import { isHttpUrl, resolveAssetUrl, resolveAssetUrls } from "@/lib/asset-url";
 import type { ProjectContentItem } from "@/types/admin";
 
 type WorksCaseDetailProps = {
@@ -30,13 +31,12 @@ function findProject(items: ProjectContentItem[], slug: string) {
 }
 
 function imageSources(project: ProjectContentItem) {
-  const fromImages = project.images.filter((image) => typeof image === "string" && image.trim().length > 0);
-  const cover = project.image && project.image.trim().length > 0 ? [project.image] : [];
+  const fromImages = resolveAssetUrls(
+    project.images.filter((image) => typeof image === "string" && image.trim().length > 0),
+  );
+  const coverImage = resolveAssetUrl(project.image);
+  const cover = coverImage ? [coverImage] : [];
   return Array.from(new Set([...cover, ...fromImages]));
-}
-
-function isLocalAsset(src: string) {
-  return src.startsWith("http://localhost:") || src.startsWith("https://localhost:");
 }
 
 export default function WorksCaseDetail({ slug }: WorksCaseDetailProps) {
@@ -112,7 +112,7 @@ export default function WorksCaseDetail({ slug }: WorksCaseDetailProps) {
               priority
               sizes="100vw"
               src={heroImage}
-              unoptimized={isLocalAsset(heroImage)}
+              unoptimized={isHttpUrl(heroImage)}
             />
           ) : (
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(124,58,237,0.35),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.3),transparent_45%),#16151a]" />
@@ -182,7 +182,7 @@ export default function WorksCaseDetail({ slug }: WorksCaseDetailProps) {
                   fill
                   sizes={index === 0 ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
                   src={src}
-                  unoptimized={isLocalAsset(src)}
+                  unoptimized={isHttpUrl(src)}
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-80" />
               </div>
