@@ -148,7 +148,11 @@
       "noDescription": "ยังไม่มีคำอธิบายโปรเจกต์",
       "visitProject": "เปิดโปรเจกต์",
       "viewRepository": "ดู Repository",
-      "order": "ลำดับ: {value}"
+      "order": "ลำดับ: {value}",
+      "projectLinks": "ลิงก์โปรเจกต์",
+      "gallery": "แกลเลอรี",
+      "overview": "ภาพรวม",
+      "imagesCount": "{count} ภาพ"
     }
   },
   "Backoffice": {

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, GitFork } from "lucide-react";
+import { ArrowLeft, ExternalLink, GitBranch, Calendar, Tag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { adminApi } from "@/lib/admin-api";
 import { isHttpUrl, resolveAssetUrl, resolveAssetUrls } from "@/lib/asset-url";
@@ -44,6 +44,7 @@ export default function WorksCaseDetail({ slug }: WorksCaseDetailProps) {
   const t = useTranslations("Portfolio.projectDetail");
   const [project, setProject] = useState<ProjectContentItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -76,120 +77,193 @@ export default function WorksCaseDetail({ slug }: WorksCaseDetailProps) {
 
   if (loading) {
     return (
-      <section className="pb-24 pt-8" data-aos="fade-up">
-        <p className="text-sm text-[#ccc3d8]">{t("loading")}</p>
+      <section className="min-h-[60vh] py-24" data-aos="fade-up">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="h-8 w-32 animate-pulse rounded bg-white/10" />
+          <div className="mt-12 space-y-4">
+            <div className="h-12 w-2/3 animate-pulse rounded bg-white/10" />
+            <div className="h-6 w-1/2 animate-pulse rounded bg-white/5" />
+          </div>
+        </div>
       </section>
     );
   }
 
   if (!project) {
     return (
-      <section className="pb-24 pt-8" data-aos="fade-up">
-        <Link className="mb-8 inline-flex items-center gap-2 text-sm text-[#d2bbff]" href={`/${locale}`}>
-          <ArrowLeft size={16} />
-          {t("backToHome")}
-        </Link>
-        <h1 className="text-3xl font-black tracking-tight text-[#f5f3ff]">{t("notFoundTitle")}</h1>
-        <p className="mt-3 text-sm text-[#ccc3d8]">{t("notFoundDescription")}</p>
+      <section className="min-h-[60vh] py-24" data-aos="fade-up">
+        <div className="mx-auto max-w-5xl px-6">
+          <Link
+            className="mb-12 inline-flex items-center gap-2 text-sm font-medium text-[#a78bfa] transition-colors hover:text-[#c4b5fd]"
+            href={`/${locale}`}
+          >
+            <ArrowLeft size={16} />
+            {t("backToHome")}
+          </Link>
+          <h1 className="text-4xl font-bold tracking-tight text-white">{t("notFoundTitle")}</h1>
+          <p className="mt-4 text-lg text-white/60">{t("notFoundDescription")}</p>
+        </div>
       </section>
     );
   }
 
+  const hasLinks = project.projectUrl || project.repoUrl;
+
   return (
-    <section className="pb-24 pt-8">
-      <Link className="mb-6 inline-flex items-center gap-2 text-sm text-[#d2bbff]" href={`/${locale}#projects`}>
-        <ArrowLeft size={16} />
+    <section className="pb-32 pt-8">
+      {/* Back Link */}
+      <Link
+        className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-white/60 transition-colors hover:text-white"
+        href={`/${locale}#projects`}
+      >
+        <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
         {t("backToProjects")}
       </Link>
 
-      <article className="overflow-hidden rounded-3xl border border-[#4a4455]/20 bg-[#17161b] shadow-[0_30px_100px_rgba(0,0,0,0.45)]">
-        <header className="relative min-h-[360px] md:min-h-[460px]" data-aos="fade-up">
-          {heroImage ? (
+      {/* Hero Section - Clean & Modern */}
+      <div className="mb-12" data-aos="fade-up">
+        {heroImage ? (
+          <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-white/5 md:aspect-[21/9]">
             <Image
               alt={`${project.title} cover`}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="object-cover"
               fill
               priority
               sizes="100vw"
               src={heroImage}
               unoptimized={isHttpUrl(heroImage)}
             />
-          ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(124,58,237,0.35),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.3),transparent_45%),#16151a]" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#111015] via-[#111015]/65 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
+          </div>
+        ) : null}
+      </div>
 
-          <div className="relative z-10 flex h-full items-end p-6 md:p-10">
-            <div className="max-w-3xl space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                {project.tag ? (
-                  <span className="rounded-full border border-[#d2bbff]/35 bg-[#d2bbff]/15 px-3 py-1 text-[10px] font-bold uppercase text-[#d2bbff]">
-                    {project.tag}
-                  </span>
-                ) : null}
-                {typeof project.index === "number" ? (
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#c9c2da]">
-                    {t("order", { value: project.index })}
-                  </span>
-                ) : null}
-              </div>
+      {/* Content Grid */}
+      <div className="mx-auto max-w-5xl px-6 lg:px-0">
+        {/* Meta Tags Row */}
+        <div className="mb-6 flex flex-wrap items-center gap-3" data-aos="fade-up" data-aos-delay="50">
+          {project.tag ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7c3aed]/10 px-3 py-1 text-xs font-medium text-[#a78bfa]">
+              <Tag size={12} />
+              {project.tag}
+            </span>
+          ) : null}
+          {typeof project.index === "number" ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-xs font-medium text-white/50">
+              <Calendar size={12} />
+              {t("order", { value: project.index })}
+            </span>
+          ) : null}
+        </div>
 
-              <h1 className="text-3xl font-black tracking-tight text-[#f5f3ff] md:text-5xl">{project.title}</h1>
+        {/* Title */}
+        <h1
+          className="mb-6 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl"
+          data-aos="fade-up"
+          data-aos-delay="100"
+        >
+          {project.title}
+        </h1>
 
-              <p className="max-w-2xl whitespace-pre-line text-sm leading-7 text-[#d6d0e4] md:text-base">
-                {project.description?.trim() || t("noDescription")}
-              </p>
+        {/* Description */}
+        {project.description?.trim() ? (
+          <p
+            className="mb-8 max-w-3xl text-lg leading-relaxed text-white/60 md:text-xl"
+            data-aos="fade-up"
+            data-aos-delay="150"
+          >
+            {project.description.trim()}
+          </p>
+        ) : null}
 
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                {project.projectUrl ? (
-                  <a
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#3b82f6] px-4 py-2 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110"
-                    href={project.projectUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <ExternalLink size={16} />
-                    {t("visitProject")}
-                  </a>
-                ) : null}
+        {/* CTA Buttons */}
+        {hasLinks ? (
+          <div className="mb-16 flex flex-wrap gap-3" data-aos="fade-up" data-aos-delay="200">
+            {project.projectUrl ? (
+              <a
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 hover:shadow-lg hover:shadow-white/10"
+                href={project.projectUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <ExternalLink size={16} />
+                {t("visitProject")}
+              </a>
+            ) : null}
+            {project.repoUrl ? (
+              <a
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10"
+                href={project.repoUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <Github size={16} />
+                {t("viewRepository")}
+              </a>
+            ) : null}
+          </div>
+        ) : null}
 
-                {project.repoUrl ? (
-                  <a
-                    className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-[#24222b]/70 px-4 py-2 text-sm font-semibold text-[#e5e2e1] transition-all duration-300 hover:border-[#7c3aed]/40 hover:bg-[#2d2a36]"
-                    href={project.repoUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <GitFork size={16} />
-                    {t("viewRepository")}
-                  </a>
-                ) : null}
-              </div>
+        {/* Image Gallery */}
+        {galleryImages.length > 0 ? (
+          <div data-aos="fade-up" data-aos-delay="250">
+            <h2 className="mb-6 text-sm font-medium uppercase tracking-widest text-white/40">Gallery</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {galleryImages.map((src, index) => (
+                <button
+                  className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-white/5 transition-transform hover:scale-[1.02]"
+                  key={`${src}-${index}`}
+                  onClick={() => setSelectedImage(src)}
+                  type="button"
+                >
+                  <Image
+                    alt={`${project.title} image ${index + 2}`}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    src={src}
+                    unoptimized={isHttpUrl(src)}
+                  />
+                  <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10 group-hover:ring-white/20" />
+                </button>
+              ))}
             </div>
           </div>
-        </header>
-
-        {galleryImages.length > 0 ? (
-          <section className="grid grid-cols-1 gap-3 p-3 md:grid-cols-2 lg:grid-cols-3" data-aos="fade-up" data-aos-delay="80">
-            {galleryImages.map((src, index) => (
-              <div
-                className={`group relative overflow-hidden rounded-2xl ${index === 0 ? "md:col-span-2 lg:col-span-2 h-[260px] md:h-[320px]" : "h-[220px] md:h-[260px]"}`}
-                key={`${src}-${index}`}
-              >
-                <Image
-                  alt={`${project.title} image ${index + 2}`}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  fill
-                  sizes={index === 0 ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
-                  src={src}
-                  unoptimized={isHttpUrl(src)}
-                />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-80" />
-              </div>
-            ))}
-          </section>
         ) : null}
-      </article>
+      </div>
+
+      {/* Lightbox Modal */}
+      {selectedImage ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={() => setSelectedImage(null)}
+          onKeyDown={(e) => e.key === "Escape" && setSelectedImage(null)}
+          tabIndex={0}
+          role="dialog"
+          aria-label="Image preview"
+        >
+          <button
+            className="absolute right-6 top-6 rounded-full bg-white/10 p-3 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+            onClick={() => setSelectedImage(null)}
+            type="button"
+            aria-label="Close"
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="relative max-h-[85vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+            <Image
+              alt="Preview"
+              className="max-h-[85vh] w-auto rounded-lg object-contain"
+              src={selectedImage}
+              width={1200}
+              height={800}
+              unoptimized={isHttpUrl(selectedImage)}
+            />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

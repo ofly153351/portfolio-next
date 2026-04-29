@@ -148,7 +148,12 @@
       "noDescription": "No description provided yet.",
       "visitProject": "Visit Project",
       "viewRepository": "View Repository",
-      "order": "Order: {value}"
+      "order": "Order: {value}",
+      "overview": "Overview",
+      "gallery": "Gallery",
+      "links": "Links",
+      "technologies": "Technologies",
+      "viewAllProjects": "View All Projects"
     }
   },
   "Backoffice": {
